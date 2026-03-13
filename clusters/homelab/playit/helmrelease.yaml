@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: playit
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: playit
+  namespace: playit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: playit
+  template:
+    metadata:
+      labels:
+        app: playit
+    spec:
+      containers:
+        - name: playit
+          image: ghcr.io/playit-cloud/playit-agent:latest
+          env:
+            - name: PLAYIT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: playit-secret
+                  key: PLAYIT_SECRET
