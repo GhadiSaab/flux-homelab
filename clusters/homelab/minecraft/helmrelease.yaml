@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: minecraft
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: itzg
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://itzg.github.io/minecraft-server-charts/
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: minecraft-bedrock
+  namespace: minecraft
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: minecraft-bedrock
+      version: "2.x"
+      sourceRef:
+        kind: HelmRepository
+        name: itzg
+        namespace: flux-system
+  values:
+    minecraftServer:
+      eula: "TRUE"
+    persistence:
+      dataDir:
+        enabled: true
+        size: 10Gi
+    service:
+      type: NodePort
+      nodePort: 19132
