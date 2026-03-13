@@ -30,6 +30,7 @@ spec:
   values:
     minecraftServer:
       eula: "TRUE"
+      levelname: "alimradloute"
     persistence:
       dataDir:
         enabled: true
