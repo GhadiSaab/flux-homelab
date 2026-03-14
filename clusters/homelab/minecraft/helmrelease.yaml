@@ -35,6 +35,5 @@ spec:
       dataDir:
         enabled: true
         size: 10Gi
-    service:
-      type: NodePort
-      nodePort: 19132
+    serviceType: NodePort
+    nodePort: 19132
