@@ -30,3 +30,8 @@ spec:
         kind: HelmRepository
         name: kube-prometheus-stack
         namespace: flux-system
+  values:
+    grafana:
+      service:
+        type: NodePort
+        nodePort: 32000
