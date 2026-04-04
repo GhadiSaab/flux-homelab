@@ -30,10 +30,6 @@ spec:
         kind: HelmRepository
         name: kube-prometheus-stack
         namespace: flux-system
-  postBuild:
-    substituteFrom:
-      - kind: Secret
-        name: discord-webhook
   values:
     grafana:
       service:
