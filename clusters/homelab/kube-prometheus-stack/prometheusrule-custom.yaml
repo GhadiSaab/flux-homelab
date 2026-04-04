@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: custom-alerts
+  namespace: monitoring-ns
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: custom.pod-eviction
+      rules:
+        - alert: PodEvicted
+          expr: kube_pod_status_reason{reason="Evicted"} == 1
+          for: 0m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod evicted: {{ $labels.namespace }}/{{ $labels.pod }}"
+            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has been evicted."
