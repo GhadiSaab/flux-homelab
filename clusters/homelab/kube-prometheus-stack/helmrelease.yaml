@@ -30,21 +30,25 @@ spec:
         kind: HelmRepository
         name: kube-prometheus-stack
         namespace: flux-system
+  postBuild:
+    substituteFrom:
+      - kind: Secret
+        name: discord-webhook
   values:
     grafana:
       service:
         type: NodePort
         nodePort: 32000
     alertmanager:
-    stringConfig: |
-      global:
-        resolve_timeout: 5m
-      route:
-        receiver: discord
-        group_wait: 30s
-        group_interval: 5m
-        repeat_interval: 1h
-      receivers:
-        - name: discord
-          discord_configs:
-            - webhook_url: ${DISCORD_WEBHOOK_URL}
+      config:
+        global:
+          resolve_timeout: 5m
+        route:
+          receiver: discord
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 1h
+        receivers:
+          - name: discord
+            discord_configs:
+              - webhook_url: ${DISCORD_WEBHOOK_URL}
