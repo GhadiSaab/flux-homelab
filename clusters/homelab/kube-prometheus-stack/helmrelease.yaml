@@ -35,6 +35,12 @@ spec:
       service:
         type: NodePort
         nodePort: 32000
+    prometheus:
+      service:
+        type: NodePort
+        nodePort: 32090
+      prometheusSpec:
+        externalUrl: "http://192.168.1.89:32090"
     alertmanager:
       config:
         global:
