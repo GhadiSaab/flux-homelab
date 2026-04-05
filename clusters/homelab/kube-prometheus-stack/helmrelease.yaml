@@ -31,6 +31,11 @@ spec:
         name: kube-prometheus-stack
         namespace: flux-system
   values:
+    defaultRules:
+      rules:
+        kubeControllerManager: false
+        kubeScheduler: false
+        kubeProxy: false
     grafana:
       service:
         type: NodePort
