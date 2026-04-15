@@ -37,6 +37,9 @@ spec:
         KubeControllerManagerDown: true
         KubeProxyDown: true
     grafana:
+      admin:
+        existingSecret: grafana-admin-secret
+        passwordKey: admin-password
       service:
         type: NodePort
         nodePort: 32000
