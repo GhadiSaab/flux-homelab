@@ -45,6 +45,10 @@ spec:
               period: 24h
     singleBinary:
       replicas: 1
+      persistence:
+        enabled: true
+        storageClass: local-path
+        size: 10Gi
     read:
       replicas: 0
     write:
