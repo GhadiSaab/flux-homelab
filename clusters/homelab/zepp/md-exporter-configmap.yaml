@@ -84,18 +84,45 @@ data:
         write_md("steps.md", "".join(lines))
 
     def export_sleep(client):
-        flux = f'''
+        # total = (slept_to - slept_from) - awake stage minutes
+        # rem_sleep_min is mislabeled in source — it's actually light sleep
+        flux_summary = f'''
     from(bucket: "{BUCKET}")
       |> range(start: {RANGE})
       |> filter(fn: (r) => r._measurement == "{MEASUREMENT}" and r.activity_type == "sleep")
-      |> filter(fn: (r) => r._field == "total_sleep_min" or r._field == "deep_sleep_min" or r._field == "rem_sleep_min")
+      |> filter(fn: (r) => r._field == "slept_from" or r._field == "slept_to" or r._field == "deep_sleep_min" or r._field == "rem_sleep_min")
       |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
       |> sort(columns: ["_time"], desc: true)
     '''
-        lines = ["# Sleep\n\n", "| Date | Total Sleep | Deep Sleep | REM Sleep |\n", "|------|-------------|------------|----------|\n"]
-        for table in run_query(client, flux):
+        flux_awake = f'''
+    from(bucket: "{BUCKET}")
+      |> range(start: {RANGE})
+      |> filter(fn: (r) => r._measurement == "{MEASUREMENT}" and r.activity_type == "sleep_stage" and r.sleep_type == "awake" and r._field == "total_sleep_min")
+      |> aggregateWindow(every: 1d, fn: sum, createEmpty: false, timeSrc: "_start")
+      |> sort(columns: ["_time"], desc: true)
+    '''
+        awake_by_day = {}
+        for table in run_query(client, flux_awake):
             for r in table.records:
-                lines.append(f"| {fmt_date(r.get_time())} | {fmt_min(r.values.get('total_sleep_min'))} | {fmt_min(r.values.get('deep_sleep_min'))} | {fmt_min(r.values.get('rem_sleep_min'))} |\n")
+                awake_by_day[fmt_date(r.get_time())] = int(r.get_value())
+
+        lines = ["# Sleep\n\n", "| Date | Total Sleep | Deep Sleep | Light Sleep |\n", "|------|-------------|------------|-------------|\n"]
+        for table in run_query(client, flux_summary):
+            for r in table.records:
+                date  = fmt_date(r.get_time())
+                total = "N/A"
+                try:
+                    fmt_str = "%Y-%m-%d %H:%M:%S"
+                    t_from   = datetime.strptime(r.values["slept_from"], fmt_str)
+                    t_to     = datetime.strptime(r.values["slept_to"], fmt_str)
+                    in_bed   = int((t_to - t_from).total_seconds() // 60)
+                    awake    = awake_by_day.get(date, 0)
+                    total    = fmt_min(in_bed - awake)
+                except Exception:
+                    pass
+                deep  = fmt_min(r.values.get("deep_sleep_min"))
+                light = fmt_min(r.values.get("rem_sleep_min"))
+                lines.append(f"| {date} | {total} | {deep} | {light} |\n")
         write_md("sleep.md", "".join(lines))
 
     def export_stress(client):
