@@ -12,7 +12,7 @@ data:
       - name: InfluxDB
         type: influxdb
         access: proxy
-        url: http://influxdb.influxdb.svc.cluster.local:8086
+        url: http://influxdb.influxdb.svc.cluster.local
         jsonData:
           version: Flux
           organization: homelab
