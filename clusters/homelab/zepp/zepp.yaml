@@ -24,3 +24,41 @@ spec:
               envFrom:
                 - secretRef:
                     name: zepp-secrets
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: zepp-md-exporter
+  namespace: zepp
+spec:
+  schedule: "55 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: md-exporter
+              image: python:3.12-slim
+              command: ["/bin/sh", "-c"]
+              args:
+                - pip install influxdb-client -q && python /scripts/export.py
+              envFrom:
+                - secretRef:
+                    name: zepp-secrets
+              volumeMounts:
+                - name: script
+                  mountPath: /scripts
+                - name: health-data
+                  mountPath: /health-data
+          volumes:
+            - name: script
+              configMap:
+                name: zepp-md-exporter-script
+            - name: health-data
+              hostPath:
+                path: /home/ghadi/health-data
+                type: DirectoryOrCreate

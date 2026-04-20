@@ -1,0 +1,154 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zepp-md-exporter-script
+  namespace: zepp
+data:
+  export.py: |
+    #!/usr/bin/env python3
+
+    import os
+    from datetime import datetime
+    from influxdb_client import InfluxDBClient
+
+    URL         = os.getenv("INFLUXDB_URL", "http://influxdb.influxdb.svc.cluster.local")
+    TOKEN       = os.getenv("INFLUXDB_TOKEN", "")
+    ORG         = os.getenv("INFLUXDB_ORG", "homelab")
+    BUCKET      = os.getenv("INFLUXDB_BUCKET", "zepp")
+    MEASUREMENT = os.getenv("INFLUXDB_MEASUREMENT", "zepp")
+    OUTPUT_DIR  = "/health-data"
+    RANGE       = "-30d"
+
+    def run_query(client, flux):
+        try:
+            return client.query_api().query(flux, org=ORG)
+        except Exception as e:
+            print(f"Query error: {e}")
+            return []
+
+    def fmt_date(dt):
+        return dt.strftime("%Y-%m-%d")
+
+    def fmt_min(m):
+        if m is None:
+            return "N/A"
+        h, mi = divmod(int(m), 60)
+        return f"{h}h{mi:02d}m"
+
+    def write_md(filename, content):
+        path = os.path.join(OUTPUT_DIR, filename)
+        with open(path, "w") as f:
+            f.write(content)
+        print(f"Written {path}")
+
+    def export_heart_rate(client):
+        base = f'from(bucket: "{BUCKET}") |> range(start: {RANGE}) |> filter(fn: (r) => r._measurement == "{MEASUREMENT}" and r._field == "heart_rate")'
+
+        avg_res, min_res, max_res, rest_res = {}, {}, {}, {}
+
+        for table in run_query(client, base + ' |> filter(fn: (r) => r["hr_measure"] == "periodic") |> aggregateWindow(every: 1d, fn: mean, createEmpty: false)'):
+            for r in table.records:
+                avg_res[fmt_date(r.get_time())] = round(r.get_value(), 1)
+
+        for table in run_query(client, base + ' |> filter(fn: (r) => r["hr_measure"] == "periodic") |> aggregateWindow(every: 1d, fn: min, createEmpty: false)'):
+            for r in table.records:
+                min_res[fmt_date(r.get_time())] = int(r.get_value())
+
+        for table in run_query(client, base + ' |> filter(fn: (r) => r["hr_measure"] == "periodic") |> aggregateWindow(every: 1d, fn: max, createEmpty: false)'):
+            for r in table.records:
+                max_res[fmt_date(r.get_time())] = int(r.get_value())
+
+        for table in run_query(client, base + ' |> filter(fn: (r) => r["hr_state"] == "resting")'):
+            for r in table.records:
+                rest_res[fmt_date(r.get_time())] = int(r.get_value())
+
+        dates = sorted(set(list(avg_res) + list(rest_res)), reverse=True)
+        lines = ["# Heart Rate\n\n", "| Date | Avg BPM | Min BPM | Max BPM | Resting BPM |\n", "|------|---------|---------|---------|-------------|\n"]
+        for d in dates:
+            lines.append(f"| {d} | {avg_res.get(d,'N/A')} | {min_res.get(d,'N/A')} | {max_res.get(d,'N/A')} | {rest_res.get(d,'N/A')} |\n")
+        write_md("heart_rate.md", "".join(lines))
+
+    def export_steps(client):
+        flux = f'''
+    from(bucket: "{BUCKET}")
+      |> range(start: {RANGE})
+      |> filter(fn: (r) => r._measurement == "{MEASUREMENT}" and r.activity_type == "steps")
+      |> filter(fn: (r) => r._field == "total_steps" or r._field == "distance_m" or r._field == "calories")
+      |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
+      |> sort(columns: ["_time"], desc: true)
+    '''
+        lines = ["# Steps & Activity\n\n", "| Date | Steps | Distance (m) | Calories |\n", "|------|-------|--------------|----------|\n"]
+        for table in run_query(client, flux):
+            for r in table.records:
+                lines.append(f"| {fmt_date(r.get_time())} | {int(r.values.get('total_steps',0)):,} | {int(r.values.get('distance_m',0)):,} | {int(r.values.get('calories',0))} |\n")
+        write_md("steps.md", "".join(lines))
+
+    def export_sleep(client):
+        flux = f'''
+    from(bucket: "{BUCKET}")
+      |> range(start: {RANGE})
+      |> filter(fn: (r) => r._measurement == "{MEASUREMENT}" and r.activity_type == "sleep")
+      |> filter(fn: (r) => r._field == "total_sleep_min" or r._field == "deep_sleep_min" or r._field == "rem_sleep_min")
+      |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
+      |> sort(columns: ["_time"], desc: true)
+    '''
+        lines = ["# Sleep\n\n", "| Date | Total Sleep | Deep Sleep | REM Sleep |\n", "|------|-------------|------------|----------|\n"]
+        for table in run_query(client, flux):
+            for r in table.records:
+                lines.append(f"| {fmt_date(r.get_time())} | {fmt_min(r.values.get('total_sleep_min'))} | {fmt_min(r.values.get('deep_sleep_min'))} | {fmt_min(r.values.get('rem_sleep_min'))} |\n")
+        write_md("sleep.md", "".join(lines))
+
+    def export_stress(client):
+        flux = f'''
+    from(bucket: "{BUCKET}")
+      |> range(start: {RANGE})
+      |> filter(fn: (r) => r._measurement == "{MEASUREMENT}" and r["stress"] == "daily")
+      |> filter(fn: (r) => r._field == "mean_stress_level" or r._field == "minimum_stress_level" or r._field == "max_stress_level")
+      |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
+      |> sort(columns: ["_time"], desc: true)
+    '''
+        lines = ["# Stress\n\n", "| Date | Avg Stress | Min Stress | Max Stress |\n", "|------|------------|------------|------------|\n"]
+        for table in run_query(client, flux):
+            for r in table.records:
+                lines.append(f"| {fmt_date(r.get_time())} | {r.values.get('mean_stress_level','N/A')} | {r.values.get('minimum_stress_level','N/A')} | {r.values.get('max_stress_level','N/A')} |\n")
+        write_md("stress.md", "".join(lines))
+
+    def export_blood_oxygen(client):
+        flux = f'''
+    from(bucket: "{BUCKET}")
+      |> range(start: {RANGE})
+      |> filter(fn: (r) => r._measurement == "{MEASUREMENT}" and r._field == "spo2_level")
+      |> aggregateWindow(every: 1d, fn: mean, createEmpty: false)
+      |> sort(columns: ["_time"], desc: true)
+    '''
+        lines = ["# Blood Oxygen (SpO2)\n\n", "| Date | Avg SpO2 (%) |\n", "|------|--------------|\n"]
+        for table in run_query(client, flux):
+            for r in table.records:
+                lines.append(f"| {fmt_date(r.get_time())} | {round(r.get_value(), 1)} |\n")
+        write_md("blood_oxygen.md", "".join(lines))
+
+    def export_pai(client):
+        flux = f'''
+    from(bucket: "{BUCKET}")
+      |> range(start: {RANGE})
+      |> filter(fn: (r) => r._measurement == "{MEASUREMENT}" and r["PAI_bound"] == "daily")
+      |> filter(fn: (r) => r._field == "pai_score" or r._field == "total_pai")
+      |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
+      |> sort(columns: ["_time"], desc: true)
+    '''
+        lines = ["# Personal Activity Intelligence (PAI)\n\n", "| Date | Daily PAI | Total PAI |\n", "|------|-----------|-----------|\n"]
+        for table in run_query(client, flux):
+            for r in table.records:
+                lines.append(f"| {fmt_date(r.get_time())} | {round(r.values.get('pai_score',0),1)} | {round(r.values.get('total_pai',0),1)} |\n")
+        write_md("pai.md", "".join(lines))
+
+    if __name__ == "__main__":
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        with InfluxDBClient(url=URL, token=TOKEN, org=ORG) as client:
+            print("Exporting heart rate..."); export_heart_rate(client)
+            print("Exporting steps...");      export_steps(client)
+            print("Exporting sleep...");      export_sleep(client)
+            print("Exporting stress...");     export_stress(client)
+            print("Exporting blood oxygen..."); export_blood_oxygen(client)
+            print("Exporting PAI...");        export_pai(client)
+        print("Done.")
