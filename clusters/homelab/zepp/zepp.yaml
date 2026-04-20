@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zepp
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: zepp-health-exporter
+  namespace: zepp
+spec:
+  schedule: "50 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: zepp-exporter
+              image: bentasker12/zepp_to_influxdb:0.5.0
+              envFrom:
+                - secretRef:
+                    name: zepp-secrets

@@ -43,6 +43,8 @@ spec:
       service:
         type: NodePort
         nodePort: 32000
+      envFromSecrets:
+        - name: grafana-influxdb-secret
     prometheus:
       service:
         type: NodePort
