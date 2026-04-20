@@ -17,7 +17,7 @@ data:
     BUCKET      = os.getenv("INFLUXDB_BUCKET", "zepp")
     MEASUREMENT = os.getenv("INFLUXDB_MEASUREMENT", "zepp")
     OUTPUT_DIR  = "/health-data"
-    RANGE       = "-30d"
+    RANGE       = os.getenv("EXPORT_RANGE", "-30d")
 
     def run_query(client, flux):
         try:
@@ -169,6 +169,47 @@ data:
                 lines.append(f"| {fmt_date(r.get_time())} | {round(r.values.get('pai_score',0),1)} | {round(r.values.get('total_pai',0),1)} |\n")
         write_md("pai.md", "".join(lines))
 
+    def export_activities(client):
+        activity_types = ["fast_walking", "slow_walking", "light_activity"]
+        # Collect per-session records keyed by (date, activity_type)
+        # Each session has a unique _time; aggregate by day
+        daily = {}  # date -> {type -> {duration_m, calories, sessions}}
+        for atype in activity_types:
+            flux = f'''
+    from(bucket: "{BUCKET}")
+      |> range(start: {RANGE})
+      |> filter(fn: (r) => r._measurement == "{MEASUREMENT}" and r.activity_type == "{atype}")
+      |> filter(fn: (r) => r._field == "activity_duration_m" or r._field == "calories")
+      |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
+      |> sort(columns: ["_time"], desc: true)
+    '''
+            for table in run_query(client, flux):
+                for r in table.records:
+                    d = fmt_date(r.get_time())
+                    if d not in daily:
+                        daily[d] = {}
+                    if atype not in daily[d]:
+                        daily[d][atype] = {"duration_m": 0, "calories": 0, "sessions": 0}
+                    daily[d][atype]["duration_m"] += int(r.values.get("activity_duration_m") or 0)
+                    daily[d][atype]["calories"]   += int(r.values.get("calories") or 0)
+                    daily[d][atype]["sessions"]   += 1
+
+        dates = sorted(daily.keys(), reverse=True)
+        lines = [
+            "# Daily Activities\n\n",
+            "| Date | Fast Walk (min/cal) | Slow Walk (min/cal) | Light Activity (min/cal) | Total Active Min |\n",
+            "|------|---------------------|---------------------|--------------------------|------------------|\n",
+        ]
+        for d in dates:
+            def fmt_act(atype):
+                a = daily[d].get(atype)
+                if not a or a["sessions"] == 0:
+                    return "—"
+                return f"{a['duration_m']}min / {a['calories']}cal"
+            total_min = sum(daily[d].get(t, {}).get("duration_m", 0) for t in activity_types)
+            lines.append(f"| {d} | {fmt_act('fast_walking')} | {fmt_act('slow_walking')} | {fmt_act('light_activity')} | {total_min} |\n")
+        write_md("activities.md", "".join(lines))
+
     if __name__ == "__main__":
         os.makedirs(OUTPUT_DIR, exist_ok=True)
         with InfluxDBClient(url=URL, token=TOKEN, org=ORG) as client:
@@ -178,4 +219,5 @@ data:
             print("Exporting stress...");     export_stress(client)
             print("Exporting blood oxygen..."); export_blood_oxygen(client)
             print("Exporting PAI...");        export_pai(client)
+            print("Exporting activities..."); export_activities(client)
         print("Done.")
