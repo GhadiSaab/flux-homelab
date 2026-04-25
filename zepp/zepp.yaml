@@ -49,6 +49,9 @@ spec:
               envFrom:
                 - secretRef:
                     name: zepp-secrets
+              env:
+                - name: READINESS_DATE_TZ
+                  value: Europe/Paris
               volumeMounts:
                 - name: script
                   mountPath: /scripts

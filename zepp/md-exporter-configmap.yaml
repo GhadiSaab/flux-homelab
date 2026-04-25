@@ -8,7 +8,8 @@ data:
     #!/usr/bin/env python3
 
     import os
-    from datetime import datetime
+    from datetime import datetime, timezone
+    from zoneinfo import ZoneInfo
     from influxdb_client import InfluxDBClient
 
     URL         = os.getenv("INFLUXDB_URL", "http://influxdb.influxdb.svc.cluster.local")
@@ -18,6 +19,7 @@ data:
     MEASUREMENT = os.getenv("INFLUXDB_MEASUREMENT", "zepp")
     OUTPUT_DIR  = "/health-data"
     RANGE       = os.getenv("EXPORT_RANGE", "-30d")
+    READINESS_DATE_TZ = os.getenv("READINESS_DATE_TZ", "Europe/Paris")
 
     def run_query(client, flux):
         try:
@@ -28,6 +30,11 @@ data:
 
     def fmt_date(dt):
         return dt.strftime("%Y-%m-%d")
+
+    def fmt_readiness_date(dt):
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(ZoneInfo(READINESS_DATE_TZ)).strftime("%Y-%m-%d")
 
     def fmt_min(m):
         if m is None:
@@ -135,7 +142,7 @@ data:
         write_md("sleep.md", "".join(lines))
 
     def export_stress(client):
-        flux = f'''
+        flux_daily = f'''
     from(bucket: "{BUCKET}")
       |> range(start: {RANGE})
       |> filter(fn: (r) => r._measurement == "{MEASUREMENT}" and r["stress"] == "daily")
@@ -143,15 +150,49 @@ data:
       |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
       |> sort(columns: ["_time"], desc: true)
     '''
-        lines = ["# Stress\n\n", "| Date | Avg Stress | Min Stress | Max Stress |\n", "|------|------------|------------|------------|\n"]
-        seen = set()
-        for table in run_query(client, flux):
+        point_base = f'''
+    from(bucket: "{BUCKET}")
+      |> range(start: {RANGE})
+      |> filter(fn: (r) => r._measurement == "{MEASUREMENT}" and r["stress"] == "point_in_time" and r._field == "current_stress_level")
+    '''
+
+        daily, point_avg, point_min, point_max, current = {}, {}, {}, {}, {}
+
+        for table in run_query(client, flux_daily):
             for r in table.records:
                 d = fmt_date(r.get_time())
-                if d in seen:
-                    continue
-                seen.add(d)
-                lines.append(f"| {d} | {r.values.get('mean_stress_level','N/A')} | {r.values.get('minimum_stress_level','N/A')} | {r.values.get('max_stress_level','N/A')} |\n")
+                daily[d] = {
+                    "avg": r.values.get("mean_stress_level"),
+                    "min": r.values.get("minimum_stress_level"),
+                    "max": r.values.get("max_stress_level"),
+                }
+
+        for target, fn in [(point_avg, "mean"), (point_min, "min"), (point_max, "max")]:
+            flux = point_base + f'''
+      |> aggregateWindow(every: 1d, fn: {fn}, createEmpty: false, timeSrc: "_start")
+      |> sort(columns: ["_time"], desc: true)
+    '''
+            for table in run_query(client, flux):
+                for r in table.records:
+                    target[fmt_date(r.get_time())] = round(r.get_value(), 1) if fn == "mean" else int(r.get_value())
+
+        flux_current = point_base + '''
+      |> sort(columns: ["_time"], desc: true)
+    '''
+        for table in run_query(client, flux_current):
+            for r in table.records:
+                d = fmt_date(r.get_time())
+                if d not in current:
+                    current[d] = int(r.get_value())
+
+        dates = sorted(set(daily) | set(point_avg) | set(current), reverse=True)
+        lines = ["# Stress\n\n", "| Date | Avg Stress | Min Stress | Max Stress | Current Stress |\n", "|------|------------|------------|------------|----------------|\n"]
+        for d in dates:
+            row = daily.get(d, {})
+            avg = row.get("avg", point_avg.get(d, "N/A"))
+            min_v = row.get("min", point_min.get(d, "N/A"))
+            max_v = row.get("max", point_max.get(d, "N/A"))
+            lines.append(f"| {d} | {avg} | {min_v} | {max_v} | {current.get(d,'N/A')} |\n")
         write_md("stress.md", "".join(lines))
 
     def export_blood_oxygen(client):
@@ -229,38 +270,57 @@ data:
             lines.append(f"| {d} | {fmt_act('fast_walking')} | {fmt_act('slow_walking')} | {fmt_act('light_activity')} | {total_min} |\n")
         write_md("activities.md", "".join(lines))
 
-    def export_readiness(client):
+    def get_readiness_rows(client):
         flux = f'''
     from(bucket: "{BUCKET}")
       |> range(start: {RANGE})
       |> filter(fn: (r) => r._measurement == "{MEASUREMENT}" and r.readiness_type == "watch_score")
-      |> filter(fn: (r) => r._field == "readiness_score" or r._field == "sleep_hrv_ms" or r._field == "hrv_score" or r._field == "sleep_rhr" or r._field == "rhr_score" or r._field == "ahi_score")
+      |> filter(fn: (r) => r._field == "readiness_score" or r._field == "physical_score" or r._field == "mental_score" or r._field == "sleep_hrv_ms" or r._field == "hrv_score" or r._field == "sleep_rhr" or r._field == "rhr_score" or r._field == "ahi_score")
       |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
       |> sort(columns: ["_time"], desc: true)
     '''
-        lines = [
-            "# Readiness & HRV\n\n",
-            "| Date | Readiness | HRV (ms) | HRV Score | Sleep RHR | RHR Score | AHI Score |\n",
-            "|------|-----------|----------|-----------|-----------|-----------|----------|\n",
-        ]
+        rows = []
         seen = set()
         for table in run_query(client, flux):
             for r in table.records:
-                d = fmt_date(r.get_time())
+                d = fmt_readiness_date(r.get_time())
                 if d in seen:
                     continue
                 seen.add(d)
-                v = r.values
-                lines.append(
-                    f"| {d} "
-                    f"| {v.get('readiness_score','N/A')} "
-                    f"| {v.get('sleep_hrv_ms','N/A')} "
-                    f"| {v.get('hrv_score','N/A')} "
-                    f"| {v.get('sleep_rhr','N/A')} "
-                    f"| {v.get('rhr_score','N/A')} "
-                    f"| {v.get('ahi_score','N/A')} |\n"
-                )
+                rows.append((d, r.values))
+        return rows
+
+    def export_readiness(rows):
+        lines = [
+            "# Readiness\n\n",
+            "| Date | Readiness | Physical | Mental |\n",
+            "|------|-----------|----------|--------|\n",
+        ]
+        for d, v in rows:
+            lines.append(
+                f"| {d} "
+                f"| {v.get('readiness_score','N/A')} "
+                f"| {v.get('physical_score','N/A')} "
+                f"| {v.get('mental_score','N/A')} |\n"
+            )
         write_md("readiness.md", "".join(lines))
+
+    def export_hrv(rows):
+        lines = [
+            "# HRV & Recovery\n\n",
+            "| Date | HRV (ms) | HRV Score | Sleep RHR | RHR Score | AHI Score |\n",
+            "|------|----------|-----------|-----------|-----------|----------|\n",
+        ]
+        for d, v in rows:
+            lines.append(
+                f"| {d} "
+                f"| {v.get('sleep_hrv_ms','N/A')} "
+                f"| {v.get('hrv_score','N/A')} "
+                f"| {v.get('sleep_rhr','N/A')} "
+                f"| {v.get('rhr_score','N/A')} "
+                f"| {v.get('ahi_score','N/A')} |\n"
+            )
+        write_md("hrv.md", "".join(lines))
 
     if __name__ == "__main__":
         os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -272,5 +332,7 @@ data:
             print("Exporting blood oxygen..."); export_blood_oxygen(client)
             print("Exporting PAI...");        export_pai(client)
             print("Exporting activities..."); export_activities(client)
-            print("Exporting readiness/HRV..."); export_readiness(client)
+            readiness_rows = get_readiness_rows(client)
+            print("Exporting readiness...");  export_readiness(readiness_rows)
+            print("Exporting HRV...");        export_hrv(readiness_rows)
         print("Done.")
