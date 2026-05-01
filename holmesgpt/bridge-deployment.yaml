@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager-holmes-bridge
+  namespace: holmesgpt
+  labels:
+    app: alertmanager-holmes-bridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager-holmes-bridge
+  template:
+    metadata:
+      labels:
+        app: alertmanager-holmes-bridge
+    spec:
+      imagePullSecrets:
+      - name: ghcr-pull-secret
+      containers:
+      - name: bridge
+        image: ghcr.io/ghadisaab/alertmanager-holmes-bridge:latest
+        imagePullPolicy: Always
+        env:
+        - name: DISCORD_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: bridge-discord-secret
+              key: DISCORD_WEBHOOK_URL
+        - name: ALERTMANAGER_URL
+          value: "http://kube-prometheus-stack-alertmanager.monitoring-ns.svc.cluster.local:9093"
+        - name: HOLMES_URL
+          value: "http://holmesgpt-holmes.holmesgpt.svc.cluster.local:80"
+        - name: POLL_INTERVAL
+          value: "60"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
