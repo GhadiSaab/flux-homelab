@@ -12,12 +12,14 @@ spec:
   schedule: "50 * * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      backoffLimit: 5
+      ttlSecondsAfterFinished: 3600
       template:
         spec:
-          restartPolicy: OnFailure
+          restartPolicy: Never
           containers:
             - name: zepp-exporter
               image: ghcr.io/ghadisaab/zepp_to_influxdb:b301f57
@@ -34,12 +36,14 @@ spec:
   schedule: "55 * * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      backoffLimit: 5
+      ttlSecondsAfterFinished: 3600
       template:
         spec:
-          restartPolicy: OnFailure
+          restartPolicy: Never
           containers:
             - name: md-exporter
               image: python:3.12-slim
