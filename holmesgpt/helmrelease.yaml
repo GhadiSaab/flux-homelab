@@ -30,5 +30,6 @@ spec:
           prometheus_url: http://kube-prometheus-stack-prometheus.monitoring-ns.svc.cluster.local:9090
       loki/logs:
         enabled: true
+        description: "Loki log aggregation"
         config:
           loki_url: http://loki.loki.svc.cluster.local:3100
