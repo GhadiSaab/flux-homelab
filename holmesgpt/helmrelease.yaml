@@ -23,6 +23,7 @@ spec:
       gemma-4-31b:
         api_key: "{{ env.GEMINI_API_KEY }}"
         model: gemini/gemma-4-31b-it
+        rpm: 10
     toolsets:
       prometheus/metrics:
         enabled: true

@@ -31,8 +31,20 @@ spec:
           value: "http://kube-prometheus-stack-alertmanager.monitoring-ns.svc.cluster.local:9093"
         - name: HOLMES_URL
           value: "http://holmesgpt-holmes.holmesgpt.svc.cluster.local:80"
+        - name: DISCORD_BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: bridge-discord-bot-secret
+              key: DISCORD_BOT_TOKEN
+        - name: DISCORD_CHANNEL_ID
+          valueFrom:
+            secretKeyRef:
+              name: bridge-discord-bot-secret
+              key: DISCORD_CHANNEL_ID
         - name: POLL_INTERVAL
           value: "60"
+        - name: REACTION_TIMEOUT
+          value: "300"
         resources:
           requests:
             cpu: 50m
