@@ -9,3 +9,4 @@ resources:
   - bridge-discord-secret-sealed.yaml
   - bridge-discord-bot-secret-sealed.yaml
   - bridge-deployment.yaml
+  - holmesgpt-admin-clusterrolebinding.yaml

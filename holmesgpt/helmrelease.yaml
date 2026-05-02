@@ -27,6 +27,24 @@ spec:
         num_retries: 5
         retry_after: 30
     toolsets:
+      bash:
+        enabled: true
+        config:
+          builtin_allowlist: extended
+          allow:
+            - "kubectl apply"
+            - "kubectl create"
+            - "kubectl delete"
+            - "kubectl patch"
+            - "kubectl scale"
+            - "kubectl set"
+            - "kubectl rollout"
+            - "kubectl exec"
+            - "kubectl cordon"
+            - "kubectl uncordon"
+            - "kubectl drain"
+            - "kubectl label"
+            - "kubectl annotate"
       prometheus/metrics:
         enabled: true
         config:
@@ -36,3 +54,57 @@ spec:
         description: "Loki log aggregation"
         config:
           loki_url: http://loki.loki.svc.cluster.local:3100
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              kind: ConfigMap
+              name: custom-toolsets-configmap
+            patch: |-
+              apiVersion: v1
+              kind: ConfigMap
+              metadata:
+                name: custom-toolsets-configmap
+              data:
+                custom_toolset.yaml: |-
+                  toolsets:
+                    bash:
+                      enabled: true
+                      config:
+                        builtin_allowlist: extended
+                        allow:
+                          - kubectl apply
+                          - kubectl create
+                          - kubectl delete
+                          - kubectl patch
+                          - kubectl scale
+                          - kubectl set
+                          - kubectl rollout
+                          - kubectl exec
+                          - kubectl cordon
+                          - kubectl uncordon
+                          - kubectl drain
+                          - kubectl label
+                          - kubectl annotate
+                    connectivity_check:
+                      enabled: true
+                    internet:
+                      enabled: true
+                    kubernetes/core:
+                      enabled: true
+                    kubernetes/logs:
+                      enabled: true
+                    loki/logs:
+                      enabled: true
+                      description: Loki log aggregation
+                      config:
+                        loki_url: http://loki.loki.svc.cluster.local:3100
+                    prometheus/metrics:
+                      enabled: true
+                      config:
+                        prometheus_url: http://kube-prometheus-stack-prometheus.monitoring-ns.svc.cluster.local:9090
+                    robusta:
+                      enabled: true
+                    runbook:
+                      enabled: true
+                  mcp_servers: {}
