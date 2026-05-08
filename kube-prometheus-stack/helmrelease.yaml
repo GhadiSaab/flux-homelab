@@ -74,6 +74,9 @@ spec:
             - receiver: "null"
               matchers:
                 - alertname="Watchdog"
+            - receiver: "null"
+              matchers:
+                - alertname=~"AlertmanagerFailedToSendAlerts|AlertmanagerClusterFailedToSendAlerts"
         receivers:
           - name: discord
             discord_configs:
