@@ -12,5 +12,3 @@ resources:
   - sealed-secrets
   - zepp
   - holmesgpt
-  - cert-manager
-  - meetily
