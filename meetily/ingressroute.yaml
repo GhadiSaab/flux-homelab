@@ -16,3 +16,20 @@ spec:
           port: 5167
   tls:
     secretName: meetily-tls
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: meetily-web-ui
+  namespace: meetily
+spec:
+  entryPoints:
+    - websecureext
+  routes:
+    - match: Host(`meetily-ui.gsaab.dev`)
+      kind: Rule
+      services:
+        - name: meetily-web-ui
+          port: 3119
+  tls:
+    secretName: meetily-ui-tls

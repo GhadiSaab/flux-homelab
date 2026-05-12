@@ -54,3 +54,46 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: meetily-data
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meetily-web-ui
+  namespace: meetily
+  labels:
+    app: meetily-web-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: meetily-web-ui
+  template:
+    metadata:
+      labels:
+        app: meetily-web-ui
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: web-ui
+          image: ghcr.io/ghadisaab/meetily-web-ui:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3119
+          env:
+            - name: BACKEND_URL
+              value: http://meetily-backend:5167
+            - name: API_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: meetily-secrets
+                  key: api-secret-key
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false

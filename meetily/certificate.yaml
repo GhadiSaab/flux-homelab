@@ -10,3 +10,16 @@ spec:
     kind: ClusterIssuer
   dnsNames:
     - meetily.gsaab.dev
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: meetily-ui-tls
+  namespace: meetily
+spec:
+  secretName: meetily-ui-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - meetily-ui.gsaab.dev
