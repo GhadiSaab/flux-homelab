@@ -6,6 +6,7 @@ metadata:
 spec:
   entryPoints:
     - websecureext
+    - websecure
   routes:
     # API routes first — more specific path takes priority
     - match: Host(`sso.gsaab.dev`) && PathPrefix(`/api`)
