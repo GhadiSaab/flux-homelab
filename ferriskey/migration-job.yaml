@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ferriskey-migrate
+  namespace: ferriskey
+  annotations:
+    # Re-run by bumping this value (e.g. on chart upgrades)
+    helm.sh/hook-weight: "0"
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: migrate
+          image: ghcr.io/ferriskey/ferriskey-api:0.5.0
+          command: [sqlx, migrate, run, --source, /usr/local/src/ferriskey/migrations]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: ferriskey-pg-app
+                  key: uri

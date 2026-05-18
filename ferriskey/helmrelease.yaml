@@ -1,0 +1,49 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ferriskey
+  namespace: ferriskey
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: ferriskey
+      version: "0.5.0"
+      sourceRef:
+        kind: HelmRepository
+        name: ferriskey
+        namespace: flux-system
+      interval: 12h
+  values:
+    publicHost: sso.gsaab.dev
+
+    # Disable bundled Postgres — we use CloudNativePG
+    postgresql:
+      enabled: false
+
+    database:
+      host: ferriskey-pg-rw
+      name: ferriskey
+      port: 5432
+      user: ferriskey
+      passwordSecret:
+        create: false
+        # CNPG auto-creates this secret when the cluster bootstraps
+        name: ferriskey-pg-app
+        key: password
+
+    api:
+      server:
+        allowedOrigins:
+          - https://sso.gsaab.dev
+      admin:
+        email: saabghadi0@gmail.com
+        username: admin
+        # chart auto-generates a random password and stores it in a secret
+        # retrieve it with: kubectl get secret -n ferriskey ferriskey-api-admin -o jsonpath='{.data.password}' | base64 -d
+      serviceMonitor:
+        enabled: true
+
+    # We use Traefik IngressRoute directly (see ingressroute.yaml)
+    ingress:
+      enabled: false

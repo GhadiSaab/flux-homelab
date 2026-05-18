@@ -1,0 +1,23 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ferriskey
+  namespace: ferriskey
+spec:
+  entryPoints:
+    - websecureext
+  routes:
+    # API routes first — more specific path takes priority
+    - match: Host(`sso.gsaab.dev`) && PathPrefix(`/api`)
+      kind: Rule
+      services:
+        - name: ferriskey-api
+          port: 3333
+    # Webapp catches everything else
+    - match: Host(`sso.gsaab.dev`)
+      kind: Rule
+      services:
+        - name: ferriskey-webapp
+          port: 80
+  tls:
+    secretName: ferriskey-tls
