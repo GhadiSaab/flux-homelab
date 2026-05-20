@@ -15,7 +15,7 @@ spec:
         namespace: flux-system
       interval: 12h
   values:
-    publicHost: sso.gsaab.dev
+    publicHost: sso.gsaab.dev:16384
 
     # Disable bundled Postgres — we use CloudNativePG
     postgresql:
@@ -35,7 +35,7 @@ spec:
     api:
       server:
         allowedOrigins:
-          - https://sso.gsaab.dev
+          - https://sso.gsaab.dev:16384
       admin:
         email: saabghadi0@gmail.com
         username: admin
