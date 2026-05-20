@@ -1,4 +1,15 @@
 apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: ferriskey-headers
+  namespace: ferriskey
+spec:
+  headers:
+    customRequestHeaders:
+      X-Forwarded-Host: "sso.gsaab.dev:16384"
+      X-Forwarded-Port: "16384"
+---
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: ferriskey
@@ -11,12 +22,16 @@ spec:
     # API routes first — more specific path takes priority
     - match: Host(`sso.gsaab.dev`) && PathPrefix(`/api`)
       kind: Rule
+      middlewares:
+        - name: ferriskey-headers
       services:
         - name: ferriskey-api
           port: 3333
     # Webapp catches everything else
     - match: Host(`sso.gsaab.dev`)
       kind: Rule
+      middlewares:
+        - name: ferriskey-headers
       services:
         - name: ferriskey-webapp
           port: 80
