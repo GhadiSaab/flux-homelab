@@ -21,8 +21,8 @@ spec:
             key: openai-api-key
       - name: OPENAI_API_BASE
         value: "https://qwen36.do-2023.dev/v1"
-    config:
-      model: "qwen36-27b"
+      - name: MODEL
+        value: "qwen36-27b"
     modelList:
       qwen36-27b:
         api_key: "{{ env.OPENAI_API_KEY }}"
