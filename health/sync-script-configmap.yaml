@@ -107,6 +107,11 @@ data:
         if metric == "sleep" and "minutesAsleep" in record:
             record = dict(record)
             record["hoursAsleep"] = round(float(record["minutesAsleep"]) / 60, 2)
+            stages = record.get("stageMinutes") or {}
+            record["deepMinutes"] = stages.get("DEEP", 0)
+            record["lightMinutes"] = stages.get("LIGHT", 0)
+            record["remMinutes"] = stages.get("REM", 0)
+            record["awakeStageMinutes"] = stages.get("AWAKE", 0)
             return record
         return record
 
