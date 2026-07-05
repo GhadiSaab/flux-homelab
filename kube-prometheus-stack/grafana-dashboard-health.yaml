@@ -1,0 +1,137 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-health
+  namespace: monitoring-ns
+  labels:
+    grafana_dashboard: "1"
+data:
+  health-overview.json: |
+    {
+      "title": "Health (Google Health / Fitbit)",
+      "uid": "ghealth-overview",
+      "timezone": "browser",
+      "schemaVersion": 39,
+      "time": { "from": "now-30d", "to": "now" },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Last Sync",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "targets": [
+            {
+              "refId": "A",
+              "type": "json",
+              "source": "url",
+              "url": "http://ghealth-data.health.svc.cluster.local/index.json",
+              "root_selector": "",
+              "columns": [ { "selector": "last_run", "text": "last_run", "type": "string" } ]
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "title": "Steps",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 12, "x": 6, "y": 0 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "targets": [
+            {
+              "refId": "A",
+              "type": "json",
+              "source": "url",
+              "url": "http://ghealth-data.health.svc.cluster.local/steps.json",
+              "root_selector": "",
+              "columns": []
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "title": "Heart Rate",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "targets": [
+            {
+              "refId": "A",
+              "type": "json",
+              "source": "url",
+              "url": "http://ghealth-data.health.svc.cluster.local/heart-rate.json",
+              "root_selector": "",
+              "columns": []
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "title": "Sleep",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "targets": [
+            {
+              "refId": "A",
+              "type": "json",
+              "source": "url",
+              "url": "http://ghealth-data.health.svc.cluster.local/sleep.json",
+              "root_selector": "",
+              "columns": []
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "title": "Weight",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "targets": [
+            {
+              "refId": "A",
+              "type": "json",
+              "source": "url",
+              "url": "http://ghealth-data.health.svc.cluster.local/weight.json",
+              "root_selector": "",
+              "columns": []
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "title": "Oxygen Saturation (SpO2)",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "targets": [
+            {
+              "refId": "A",
+              "type": "json",
+              "source": "url",
+              "url": "http://ghealth-data.health.svc.cluster.local/oxygen-saturation.json",
+              "root_selector": "",
+              "columns": []
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "title": "Heart Rate Variability",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "targets": [
+            {
+              "refId": "A",
+              "type": "json",
+              "source": "url",
+              "url": "http://ghealth-data.health.svc.cluster.local/heart-rate-variability.json",
+              "root_selector": "",
+              "columns": []
+            }
+          ]
+        }
+      ]
+    }

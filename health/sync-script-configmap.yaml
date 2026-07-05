@@ -1,0 +1,196 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ghealth-sync-script
+  namespace: health
+data:
+  sync.py: |
+    #!/usr/bin/env python3
+    import json
+    import os
+    import shutil
+    import subprocess
+    import sys
+    from datetime import date, timedelta
+
+    GHEALTH_BIN = "/shared/ghealth"
+    DATA_DIR = "/data"
+    STATE_DIR = "/data/.state"
+    CONFIG_SRC = "/secret-config"
+    CONFIG_DST = os.environ.get("GHEALTH_CONFIG_DIR", "/config")
+    FIRST_RUN_LOOKBACK_DAYS = 365
+    OVERLAP_DAYS = 3  # re-fetch a small overlap window to catch late-synced device data
+
+    # Metric name -> ghealth operation to use for fetching series data.
+    METRICS = {
+        "steps": "daily-rollup",
+        "heart-rate": "daily-rollup",
+        "sleep": "list",
+        "weight": "list",
+        "oxygen-saturation": "list",
+        "heart-rate-variability": "list",
+    }
+
+    # daily-rollup does not accept --limit/--page-token; only list-style ops do.
+    ROLLUP_OPS = {"daily-rollup", "rollup"}
+
+    # Per-metric max date-range span (days) the API accepts for rollup requests.
+    ROLLUP_MAX_DAYS = {
+        "steps": 90,
+        "heart-rate": 14,
+    }
+
+
+    def log(msg):
+        print(msg, flush=True)
+
+
+    def setup_config():
+        os.makedirs(CONFIG_DST, exist_ok=True)
+        for name in os.listdir(CONFIG_SRC):
+            src = os.path.join(CONFIG_SRC, name)
+            if not os.path.isfile(src):
+                continue
+            dst = os.path.join(CONFIG_DST, name)
+            shutil.copy(src, dst)
+            os.chmod(dst, 0o600)
+        os.makedirs(STATE_DIR, exist_ok=True)
+
+
+    def last_synced(metric):
+        path = os.path.join(STATE_DIR, f"{metric}.txt")
+        if os.path.exists(path):
+            with open(path) as f:
+                return f.read().strip()
+        return None
+
+
+    def save_synced(metric, day):
+        with open(os.path.join(STATE_DIR, f"{metric}.txt"), "w") as f:
+            f.write(day)
+
+
+    def record_key(record):
+        for key in ("date", "start", "startTime", "time"):
+            if key in record:
+                return record[key]
+        sample_time = record.get("sampleTime")
+        if isinstance(sample_time, dict):
+            return sample_time.get("physicalTime") or sample_time.get("civilTime") or json.dumps(record, sort_keys=True)
+        if isinstance(sample_time, str):
+            return sample_time
+        return json.dumps(record, sort_keys=True)
+
+
+    def run_ghealth(metric, op, from_date, to_date, page_token=None):
+        cmd = [GHEALTH_BIN, "data", metric, op, "--from", from_date, "--to", to_date]
+        if op not in ROLLUP_OPS:
+            cmd += ["--limit", "5000"]
+            if page_token:
+                cmd += ["--page-token", page_token]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        if result.returncode != 0:
+            log(f"[{metric}] ghealth exited {result.returncode}: {result.stderr.strip()[:500]}")
+            return None, None
+        try:
+            payload = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            log(f"[{metric}] could not parse JSON output: {result.stdout[:200]}")
+            return None, None
+        next_token = payload.get("nextPageToken") if isinstance(payload, dict) else None
+        if isinstance(payload, dict):
+            for key in ("dataPoints", "data", "items", "records"):
+                if key in payload and isinstance(payload[key], list):
+                    return payload[key], next_token
+            return [], None
+        if isinstance(payload, list):
+            return payload, None
+        return [], None
+
+
+    def daterange_chunks(since_date, today, max_days):
+        chunk_start = since_date
+        while chunk_start <= today:
+            chunk_end = min(chunk_start + timedelta(days=max_days - 1), today)
+            yield chunk_start.isoformat(), chunk_end.isoformat()
+            chunk_start = chunk_end + timedelta(days=1)
+
+
+    def fetch(metric, op, since_date, today):
+        all_records = []
+        if op in ROLLUP_OPS:
+            max_days = ROLLUP_MAX_DAYS.get(metric, 90)
+            for chunk_from, chunk_to in daterange_chunks(since_date, today, max_days):
+                records, _ = run_ghealth(metric, op, chunk_from, chunk_to)
+                if records is None:
+                    return None
+                all_records.extend(records)
+            return all_records
+
+        since = since_date.isoformat()
+        page_token = None
+        for _ in range(20):  # safety cap: 20 pages x 5000 = 100k records per run
+            records, next_token = run_ghealth(metric, op, since, "today", page_token=page_token)
+            if records is None:
+                return None if not all_records else all_records
+            all_records.extend(records)
+            if not next_token:
+                break
+            page_token = next_token
+        return all_records
+
+
+    def merge(metric, new_records):
+        out_path = os.path.join(DATA_DIR, f"{metric}.json")
+        existing = []
+        if os.path.exists(out_path):
+            with open(out_path) as f:
+                try:
+                    existing = json.load(f)
+                except json.JSONDecodeError:
+                    existing = []
+        merged = {record_key(r): r for r in existing}
+        for r in new_records:
+            merged[record_key(r)] = r
+        combined = sorted(merged.values(), key=record_key)
+        tmp_path = out_path + ".tmp"
+        with open(tmp_path, "w") as f:
+            json.dump(combined, f)
+        os.replace(tmp_path, out_path)
+        return len(combined)
+
+
+    def main():
+        setup_config()
+        today = date.today()
+        summary = {}
+        for metric, op in METRICS.items():
+            since_state = last_synced(metric)
+            if since_state:
+                since_date = date.fromisoformat(since_state) - timedelta(days=OVERLAP_DAYS)
+            else:
+                since_date = today - timedelta(days=FIRST_RUN_LOOKBACK_DAYS)
+            log(f"[{metric}] fetching {op} since {since_date.isoformat()}")
+            records = fetch(metric, op, since_date, today)
+            if records is None:
+                summary[metric] = {"status": "error"}
+                continue
+            total = merge(metric, records)
+            save_synced(metric, today.isoformat())
+            summary[metric] = {"status": "ok", "new_or_updated": len(records), "total": total}
+            log(f"[{metric}] merged {len(records)} records, {total} total on disk")
+
+        index = {
+            "last_run": today.isoformat(),
+            "metrics": summary,
+        }
+        with open(os.path.join(DATA_DIR, "index.json"), "w") as f:
+            json.dump(index, f, indent=2)
+        log(f"sync complete: {json.dumps(summary)}")
+
+        if all(v.get("status") == "error" for v in summary.values()):
+            sys.exit(1)
+
+
+    if __name__ == "__main__":
+        main()

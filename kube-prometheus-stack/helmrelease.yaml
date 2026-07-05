@@ -49,6 +49,17 @@ spec:
       service:
         type: NodePort
         nodePort: 32000
+      plugins:
+        - yesoreyeram-infinity-datasource
+      additionalDataSources:
+        - name: ghealth
+          uid: ghealth-infinity
+          type: yesoreyeram-infinity-datasource
+          access: proxy
+          isDefault: false
+          jsonData:
+            allowedHosts:
+              - http://ghealth-data.health.svc.cluster.local
     prometheus:
       service:
         type: NodePort

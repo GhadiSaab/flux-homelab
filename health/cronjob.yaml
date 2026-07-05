@@ -1,0 +1,86 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ghealth-sync
+  namespace: health
+spec:
+  schedule: "*/30 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext:
+            fsGroup: 1000
+          initContainers:
+            - name: build-ghealth
+              image: golang:1.24
+              command:
+                - sh
+                - -c
+                - |
+                  set -e
+                  git clone --depth 1 https://github.com/Google-Health-API/google-health-cli.git /src
+                  cd /src
+                  CGO_ENABLED=0 GOOS=linux go build -o /shared/ghealth .
+                  chmod +x /shared/ghealth
+              volumeMounts:
+                - name: shared
+                  mountPath: /shared
+              resources:
+                requests:
+                  cpu: 200m
+                  memory: 256Mi
+                limits:
+                  cpu: "1"
+                  memory: 512Mi
+          containers:
+            - name: sync
+              image: python:3.12-slim
+              command: ["python", "/app/sync.py"]
+              env:
+                - name: GHEALTH_CONFIG_DIR
+                  value: /config
+                - name: HOME
+                  value: /config
+              volumeMounts:
+                - name: shared
+                  mountPath: /shared
+                - name: sync-script
+                  mountPath: /app
+                - name: data
+                  mountPath: /data
+                - name: config-secret
+                  mountPath: /secret-config
+                  readOnly: true
+                - name: config-writable
+                  mountPath: /config
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                runAsUser: 1000
+          volumes:
+            - name: shared
+              emptyDir: {}
+            - name: sync-script
+              configMap:
+                name: ghealth-sync-script
+            - name: data
+              persistentVolumeClaim:
+                claimName: ghealth-data
+            - name: config-secret
+              secret:
+                secretName: ghealth-oauth
+            - name: config-writable
+              emptyDir: {}
