@@ -4,7 +4,6 @@ resources:
   - ddns
   - flux-system
   - immich
-  - influxdb
   - infra
   - kube-prometheus-stack
   - loki
