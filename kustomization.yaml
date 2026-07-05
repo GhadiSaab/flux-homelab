@@ -8,7 +8,6 @@ resources:
   - infra
   - kube-prometheus-stack
   - loki
-  - minecraft
   - sealed-secrets
   - zepp
   - holmesgpt
