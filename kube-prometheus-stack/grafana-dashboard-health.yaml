@@ -15,155 +15,298 @@ data:
       "time": { "from": "now-90d", "to": "now" },
       "panels": [
         {
-          "id": 1,
-          "title": "Last Sync",
-          "type": "stat",
-          "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+          "id": 100, "title": "Overview", "type": "row", "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "panels": []
+        },
+        {
+          "id": 1, "title": "Steps Today", "type": "stat",
+          "gridPos": { "h": 4, "w": 5, "x": 0, "y": 1 },
           "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
-          "targets": [
-            {
-              "refId": "A",
-              "type": "json",
-              "source": "url",
-              "format": "table",
-              "url": "http://ghealth-data.health.svc.cluster.local/index.json",
-              "root_selector": "",
-              "columns": [],
-              "url_options": { "method": "GET" }
-            }
-          ],
+          "fieldConfig": { "defaults": {
+            "unit": "none",
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "#d03b3b", "value": null },
+              { "color": "#fab219", "value": 5000 },
+              { "color": "#0ca30c", "value": 10000 }
+            ] },
+            "color": { "mode": "thresholds" }
+          }, "overrides": [] },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^countSum$/" }, "textMode": "value_and_name", "graphMode": "area" },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/steps.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ],
+          "transformations": [ { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "countSum", "destinationType": "number" } ] } } ]
+        },
+        {
+          "id": 2, "title": "Resting Heart Rate", "type": "stat",
+          "gridPos": { "h": 4, "w": 5, "x": 5, "y": 1 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "#2a78d6" } }, "overrides": [] },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^beatsPerMinute$/" }, "textMode": "value_and_name", "graphMode": "area" },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/daily-resting-heart-rate.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ],
+          "transformations": [ { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "beatsPerMinute", "destinationType": "number" } ] } } ]
+        },
+        {
+          "id": 3, "title": "Sleep Last Night", "type": "stat",
+          "gridPos": { "h": 4, "w": 5, "x": 10, "y": 1 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "fieldConfig": { "defaults": {
+            "unit": "h",
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "#d03b3b", "value": null },
+              { "color": "#fab219", "value": 6 },
+              { "color": "#0ca30c", "value": 7 }
+            ] },
+            "color": { "mode": "thresholds" }
+          }, "overrides": [] },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^hoursAsleep$/" }, "textMode": "value_and_name", "graphMode": "area" },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/sleep.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ]
+        },
+        {
+          "id": 4, "title": "Weight", "type": "stat",
+          "gridPos": { "h": 4, "w": 5, "x": 15, "y": 1 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "#2a78d6" } }, "overrides": [] },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^weightKg$/" }, "textMode": "value_and_name", "graphMode": "area" },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/weight.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ]
+        },
+        {
+          "id": 5, "title": "Last Sync", "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "#898781" } }, "overrides": [] },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^last_run$/" }, "textMode": "value_and_name" },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/index.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ]
+        },
+
+        {
+          "id": 101, "title": "Activity", "type": "row", "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 }, "panels": []
+        },
+        {
+          "id": 10, "title": "Daily Steps", "type": "barchart",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "fieldConfig": { "defaults": {
+            "unit": "none",
+            "custom": { "axisLabel": "steps" },
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "#d03b3b", "value": null },
+              { "color": "#fab219", "value": 5000 },
+              { "color": "#0ca30c", "value": 10000 }
+            ] },
+            "color": { "mode": "thresholds" }
+          }, "overrides": [] },
+          "options": { "legend": { "showLegend": false }, "xTickLabelRotation": -45 },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/steps.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ],
+          "transformations": [ { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "countSum", "destinationType": "number" } ] } } ]
+        },
+        {
+          "id": 11, "title": "Daily Distance (km)", "type": "barchart",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "#2a78d6" } }, "overrides": [] },
+          "options": { "legend": { "showLegend": false }, "xTickLabelRotation": -45 },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/distance.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ],
           "transformations": [
-            { "id": "organize", "options": { "includeByName": { "last_run": true }, "indexByName": {}, "excludeByName": {} } }
+            { "id": "organize", "options": { "excludeByName": { "millimetersSum": true }, "indexByName": {}, "includeByName": {} } },
+            { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "distanceKm", "destinationType": "number" } ] } }
           ]
         },
         {
-          "id": 2,
-          "title": "Daily Steps",
-          "type": "barchart",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+          "id": 12, "title": "Calories Burned (kcal)", "type": "barchart",
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 14 },
           "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
-          "targets": [
-            {
-              "refId": "A",
-              "type": "json",
-              "source": "url",
-              "format": "table",
-              "url": "http://ghealth-data.health.svc.cluster.local/steps.json",
-              "root_selector": "",
-              "columns": [],
-              "url_options": { "method": "GET" }
-            }
-          ],
+          "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "#eb6834" } }, "overrides": [] },
+          "options": { "legend": { "showLegend": false }, "xTickLabelRotation": -45 },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/total-calories.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ],
+          "transformations": [ { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "kcalSum", "destinationType": "number" } ] } } ]
+        },
+        {
+          "id": 13, "title": "Active Minutes by Intensity", "type": "barchart",
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 14 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "fieldConfig": {
+            "defaults": { "unit": "m" },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "lightMinutes" }, "properties": [ { "id": "displayName", "value": "Light" }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "#6da7ec" } } ] },
+              { "matcher": { "id": "byName", "options": "moderateMinutes" }, "properties": [ { "id": "displayName", "value": "Moderate" }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "#2a78d6" } } ] },
+              { "matcher": { "id": "byName", "options": "vigorousMinutes" }, "properties": [ { "id": "displayName", "value": "Vigorous" }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "#184f95" } } ] }
+            ]
+          },
+          "options": { "stacking": "normal", "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" } },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/active-minutes.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ]
+        },
+        {
+          "id": 14, "title": "Recent Exercise Sessions", "type": "table",
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 14 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "options": { "sortBy": [ { "displayName": "start", "desc": true } ] },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/exercise.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ],
           "transformations": [
-            { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "countSum", "destinationType": "number" } ] } }
+            { "id": "organize", "options": {
+              "includeByName": { "start": true, "displayName": true, "activeDuration": true, "distanceKm": true, "caloriesKcal": true, "avgHeartRateBpm": true },
+              "indexByName": { "start": 0, "displayName": 1, "activeDuration": 2, "distanceKm": 3, "caloriesKcal": 4, "avgHeartRateBpm": 5 },
+              "excludeByName": {}
+            } }
+          ]
+        },
+
+        {
+          "id": 102, "title": "Heart & Vitals", "type": "row", "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 }, "panels": []
+        },
+        {
+          "id": 20, "title": "Heart Rate (daily avg/min/max)", "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "fieldConfig": {
+            "defaults": { "unit": "none", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 0 } },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "beatsPerMinuteAvg" }, "properties": [ { "id": "displayName", "value": "Avg" }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "#2a78d6" } } ] },
+              { "matcher": { "id": "byName", "options": "beatsPerMinuteMin" }, "properties": [ { "id": "displayName", "value": "Min" }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "#1baf7a" } } ] },
+              { "matcher": { "id": "byName", "options": "beatsPerMinuteMax" }, "properties": [ { "id": "displayName", "value": "Max" }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "#e34948" } } ] }
+            ]
+          },
+          "options": { "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/heart-rate.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ],
+          "transformations": [ { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "date", "destinationType": "time" } ] } } ]
+        },
+        {
+          "id": 21, "title": "Resting Heart Rate Trend", "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 23 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "#2a78d6" }, "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 } }, "overrides": [] },
+          "options": { "legend": { "showLegend": false }, "tooltip": { "mode": "single" } },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/daily-resting-heart-rate.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ],
+          "transformations": [ { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "date", "destinationType": "time" }, { "targetField": "beatsPerMinute", "destinationType": "number" } ] } } ]
+        },
+        {
+          "id": 22, "title": "Oxygen Saturation (SpO2 %)", "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 31 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "fieldConfig": { "defaults": {
+            "unit": "percent", "min": 80, "max": 100,
+            "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "#d03b3b", "value": null },
+              { "color": "#fab219", "value": 90 },
+              { "color": "#0ca30c", "value": 95 }
+            ] },
+            "color": { "mode": "thresholds" }
+          }, "overrides": [] },
+          "options": { "legend": { "showLegend": false }, "tooltip": { "mode": "single" } },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/oxygen-saturation.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ],
+          "transformations": [ { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "time", "destinationType": "time" } ] } } ]
+        },
+        {
+          "id": 23, "title": "Heart Rate Variability (ms)", "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 31 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "fieldConfig": { "defaults": { "unit": "ms", "color": { "mode": "fixed", "fixedColor": "#4a3aa7" }, "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 } }, "overrides": [] },
+          "options": { "legend": { "showLegend": false }, "tooltip": { "mode": "single" } },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/heart-rate-variability.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ],
+          "transformations": [ { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "time", "destinationType": "time" } ] } } ]
+        },
+
+        {
+          "id": 103, "title": "Sleep & Body", "type": "row", "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 39 }, "panels": []
+        },
+        {
+          "id": 30, "title": "Sleep Stages per Night (min)", "type": "barchart",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
+          "fieldConfig": {
+            "defaults": { "unit": "m" },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "deepMinutes" }, "properties": [ { "id": "displayName", "value": "Deep" }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "#2a78d6" } } ] },
+              { "matcher": { "id": "byName", "options": "lightMinutes" }, "properties": [ { "id": "displayName", "value": "Light" }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "#1baf7a" } } ] },
+              { "matcher": { "id": "byName", "options": "remMinutes" }, "properties": [ { "id": "displayName", "value": "REM" }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "#4a3aa7" } } ] },
+              { "matcher": { "id": "byName", "options": "awakeStageMinutes" }, "properties": [ { "id": "displayName", "value": "Awake" }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "#fab219" } } ] }
+            ]
+          },
+          "options": { "stacking": "normal", "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom" }, "xTickLabelRotation": -45 },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/sleep.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ],
+          "transformations": [
+            { "id": "organize", "options": { "includeByName": { "start": true, "deepMinutes": true, "lightMinutes": true, "remMinutes": true, "awakeStageMinutes": true }, "indexByName": {}, "excludeByName": {} } }
           ]
         },
         {
-          "id": 3,
-          "title": "Heart Rate (daily avg/min/max)",
-          "type": "timeseries",
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+          "id": 31, "title": "Sleep Duration Trend (hours)", "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 },
           "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
-          "targets": [
-            {
-              "refId": "A",
-              "type": "json",
-              "source": "url",
-              "format": "table",
-              "url": "http://ghealth-data.health.svc.cluster.local/heart-rate.json",
-              "root_selector": "",
-              "columns": [],
-              "url_options": { "method": "GET" }
-            }
-          ],
-          "transformations": [
-            { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "date", "destinationType": "time" } ] } }
-          ]
+          "fieldConfig": { "defaults": {
+            "unit": "h",
+            "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
+            "thresholds": { "mode": "absolute", "steps": [
+              { "color": "#d03b3b", "value": null },
+              { "color": "#fab219", "value": 6 },
+              { "color": "#0ca30c", "value": 7 }
+            ] },
+            "color": { "mode": "thresholds" }
+          }, "overrides": [] },
+          "options": { "legend": { "showLegend": false }, "tooltip": { "mode": "single" } },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/sleep.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ],
+          "transformations": [ { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "start", "destinationType": "time" } ] } } ]
         },
         {
-          "id": 4,
-          "title": "Sleep",
-          "type": "table",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+          "id": 32, "title": "Weight Trend (kg)", "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 48 },
           "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
-          "targets": [
-            {
-              "refId": "A",
-              "type": "json",
-              "source": "url",
-              "format": "table",
-              "url": "http://ghealth-data.health.svc.cluster.local/sleep.json",
-              "root_selector": "",
-              "columns": [],
-              "url_options": { "method": "GET" }
-            }
-          ]
+          "fieldConfig": { "defaults": { "unit": "none", "color": { "mode": "fixed", "fixedColor": "#2a78d6" }, "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "spanNulls": true } }, "overrides": [] },
+          "options": { "legend": { "showLegend": false }, "tooltip": { "mode": "single" } },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/weight.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ],
+          "transformations": [ { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "time", "destinationType": "time" } ] } } ]
         },
         {
-          "id": 5,
-          "title": "Weight (g)",
-          "type": "timeseries",
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+          "id": 33, "title": "Sleep Detail", "type": "table",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 48 },
           "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
-          "targets": [
-            {
-              "refId": "A",
-              "type": "json",
-              "source": "url",
-              "format": "table",
-              "url": "http://ghealth-data.health.svc.cluster.local/weight.json",
-              "root_selector": "",
-              "columns": [],
-              "url_options": { "method": "GET" }
-            }
-          ],
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "options": { "sortBy": [ { "displayName": "start", "desc": true } ] },
+          "targets": [ { "refId": "A", "type": "json", "source": "url", "format": "table",
+            "url": "http://ghealth-data.health.svc.cluster.local/sleep.json", "root_selector": "", "columns": [],
+            "url_options": { "method": "GET" } } ],
           "transformations": [
-            { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "time", "destinationType": "time" } ] } }
-          ]
-        },
-        {
-          "id": 6,
-          "title": "Oxygen Saturation (SpO2 %)",
-          "type": "timeseries",
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
-          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
-          "fieldConfig": { "defaults": { "min": 85, "max": 100 }, "overrides": [] },
-          "targets": [
-            {
-              "refId": "A",
-              "type": "json",
-              "source": "url",
-              "format": "table",
-              "url": "http://ghealth-data.health.svc.cluster.local/oxygen-saturation.json",
-              "root_selector": "",
-              "columns": [],
-              "url_options": { "method": "GET" }
-            }
-          ],
-          "transformations": [
-            { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "time", "destinationType": "time" } ] } }
-          ]
-        },
-        {
-          "id": 7,
-          "title": "Heart Rate Variability (ms)",
-          "type": "timeseries",
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
-          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ghealth-infinity" },
-          "targets": [
-            {
-              "refId": "A",
-              "type": "json",
-              "source": "url",
-              "format": "table",
-              "url": "http://ghealth-data.health.svc.cluster.local/heart-rate-variability.json",
-              "root_selector": "",
-              "columns": [],
-              "url_options": { "method": "GET" }
-            }
-          ],
-          "transformations": [
-            { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "time", "destinationType": "time" } ] } }
+            { "id": "organize", "options": {
+              "includeByName": { "start": true, "hoursAsleep": true, "minutesAwake": true, "deepMinutes": true, "lightMinutes": true, "remMinutes": true },
+              "indexByName": { "start": 0, "hoursAsleep": 1, "minutesAwake": 2, "deepMinutes": 3, "lightMinutes": 4, "remMinutes": 5 },
+              "excludeByName": {}
+            } }
           ]
         }
       ]
