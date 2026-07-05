@@ -24,11 +24,16 @@ data:
     # Metric name -> ghealth operation to use for fetching series data.
     METRICS = {
         "steps": "daily-rollup",
+        "distance": "daily-rollup",
+        "total-calories": "daily-rollup",
+        "active-minutes": "daily-rollup",
         "heart-rate": "daily-rollup",
+        "daily-resting-heart-rate": "list",
         "sleep": "list",
         "weight": "list",
         "oxygen-saturation": "list",
         "heart-rate-variability": "list",
+        "exercise": "list",
     }
 
     # daily-rollup does not accept --limit/--page-token; only list-style ops do.
@@ -38,6 +43,9 @@ data:
     ROLLUP_MAX_DAYS = {
         "steps": 90,
         "heart-rate": 14,
+        "distance": 90,
+        "total-calories": 14,
+        "active-minutes": 14,
     }
 
 
@@ -68,6 +76,39 @@ data:
     def save_synced(metric, day):
         with open(os.path.join(STATE_DIR, f"{metric}.txt"), "w") as f:
             f.write(day)
+
+
+    def flatten(metric, record):
+        if metric == "active-minutes":
+            flat = {"date": record.get("date")}
+            for entry in record.get("activeMinutesRollupByActivityLevel", []):
+                level = entry.get("activityLevel", "").lower()
+                flat[f"{level}Minutes"] = int(entry.get("activeMinutesSum", 0))
+            return flat
+        if metric == "exercise":
+            summary = record.get("metricsSummary", {})
+            flat = dict(record)
+            flat.pop("exerciseMetadata", None)
+            flat.pop("metricsSummary", None)
+            flat["caloriesKcal"] = summary.get("caloriesKcal")
+            flat["avgHeartRateBpm"] = summary.get("averageHeartRateBeatsPerMinute")
+            distance_m = summary.get("distanceMeters") or summary.get("distance")
+            if distance_m is not None:
+                flat["distanceKm"] = round(float(distance_m) / 1000, 2)
+            return flat
+        if metric == "distance" and "millimetersSum" in record:
+            record = dict(record)
+            record["distanceKm"] = round(float(record["millimetersSum"]) / 1_000_000, 2)
+            return record
+        if metric == "weight" and "weightGrams" in record:
+            record = dict(record)
+            record["weightKg"] = round(float(record["weightGrams"]) / 1000, 2)
+            return record
+        if metric == "sleep" and "minutesAsleep" in record:
+            record = dict(record)
+            record["hoursAsleep"] = round(float(record["minutesAsleep"]) / 60, 2)
+            return record
+        return record
 
 
     def record_key(record):
@@ -151,6 +192,7 @@ data:
                     existing = []
         merged = {record_key(r): r for r in existing}
         for r in new_records:
+            r = flatten(metric, r)
             merged[record_key(r)] = r
         combined = sorted(merged.values(), key=record_key)
         tmp_path = out_path + ".tmp"
