@@ -28,7 +28,8 @@ data:
               "format": "table",
               "url": "http://ghealth-data.health.svc.cluster.local/index.json",
               "root_selector": "",
-              "columns": []
+              "columns": [],
+              "url_options": { "method": "GET" }
             }
           ],
           "transformations": [
@@ -49,7 +50,8 @@ data:
               "format": "table",
               "url": "http://ghealth-data.health.svc.cluster.local/steps.json",
               "root_selector": "",
-              "columns": []
+              "columns": [],
+              "url_options": { "method": "GET" }
             }
           ],
           "transformations": [
@@ -70,7 +72,8 @@ data:
               "format": "table",
               "url": "http://ghealth-data.health.svc.cluster.local/heart-rate.json",
               "root_selector": "",
-              "columns": []
+              "columns": [],
+              "url_options": { "method": "GET" }
             }
           ],
           "transformations": [
@@ -91,7 +94,8 @@ data:
               "format": "table",
               "url": "http://ghealth-data.health.svc.cluster.local/sleep.json",
               "root_selector": "",
-              "columns": []
+              "columns": [],
+              "url_options": { "method": "GET" }
             }
           ]
         },
@@ -109,7 +113,8 @@ data:
               "format": "table",
               "url": "http://ghealth-data.health.svc.cluster.local/weight.json",
               "root_selector": "",
-              "columns": []
+              "columns": [],
+              "url_options": { "method": "GET" }
             }
           ],
           "transformations": [
@@ -131,7 +136,8 @@ data:
               "format": "table",
               "url": "http://ghealth-data.health.svc.cluster.local/oxygen-saturation.json",
               "root_selector": "",
-              "columns": []
+              "columns": [],
+              "url_options": { "method": "GET" }
             }
           ],
           "transformations": [
@@ -152,7 +158,8 @@ data:
               "format": "table",
               "url": "http://ghealth-data.health.svc.cluster.local/heart-rate-variability.json",
               "root_selector": "",
-              "columns": []
+              "columns": [],
+              "url_options": { "method": "GET" }
             }
           ],
           "transformations": [
