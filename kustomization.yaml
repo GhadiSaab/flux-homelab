@@ -9,5 +9,4 @@ resources:
   - loki
   - sealed-secrets
   - holmesgpt
-  - meetily
   - traefik
