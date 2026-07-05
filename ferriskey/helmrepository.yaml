@@ -1,9 +1,0 @@
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: HelmRepository
-metadata:
-  name: ferriskey
-  namespace: flux-system
-spec:
-  type: oci
-  url: oci://ghcr.io/ferriskey/charts
-  interval: 12h
