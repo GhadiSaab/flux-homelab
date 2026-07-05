@@ -9,7 +9,6 @@ resources:
   - kube-prometheus-stack
   - loki
   - sealed-secrets
-  - zepp
   - holmesgpt
   - meetily
   - traefik
