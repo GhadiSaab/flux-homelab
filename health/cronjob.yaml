@@ -4,6 +4,7 @@ metadata:
   name: ghealth-sync
   namespace: health
 spec:
+  suspend: true
   schedule: "*/30 * * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
