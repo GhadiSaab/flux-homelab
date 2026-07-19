@@ -6,3 +6,4 @@ resources:
   - cloudnative-pg.yaml
   - ocirepo.yaml
   - helmrelease.yaml
+  - ingress.yaml

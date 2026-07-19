@@ -41,7 +41,9 @@ spec:
                 .Release.Name }}'
               REDIS_HOSTNAME: '{{ printf "%s-valkey" .Release.Name }}'
     immich:
-      configuration: {}
+      configuration:
+        server:
+          externalDomain: https://gsaab.dev:16384
       configurationKind: ConfigMap
       metrics:
         enabled: true
