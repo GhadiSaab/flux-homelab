@@ -41,7 +41,7 @@ immich:
       existingClaim: immich-library
   configuration:
     server:
-      externalDomain: https://gsaab.dev:16384
+      externalDomain: https://immich.gsaab.dev:16384
   configurationKind: ConfigMap
 
 # Dependencies

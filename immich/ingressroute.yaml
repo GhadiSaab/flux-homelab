@@ -8,7 +8,7 @@ spec:
     - websecureext
   routes:
     - kind: Rule
-      match: Host(`gsaab.dev`)
+      match: Host(`immich.gsaab.dev`)
       services:
         - name: immich-server
           port: 2283
