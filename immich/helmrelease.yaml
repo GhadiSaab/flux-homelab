@@ -40,8 +40,6 @@ spec:
               IMMICH_MACHINE_LEARNING_URL: '{{ printf "http://%s-machine-learning:3003"
                 .Release.Name }}'
               REDIS_HOSTNAME: '{{ printf "%s-valkey" .Release.Name }}'
-            image:
-              tag: v2.6.3
     immich:
       configuration: {}
       configurationKind: ConfigMap
@@ -70,6 +68,7 @@ spec:
           globalMounts:
           - path: /cache
             subPath: ml-cache
+          type: persistentVolumeClaim
     server:
       controllers:
         main:
@@ -91,13 +90,6 @@ spec:
               service:
                 identifier: main
           tls: []
-      service:
-        main:
-          ports:
-            http:
-              nodePort: 32283
-              port: 2283
-          type: NodePort
     valkey:
       controllers:
         main:
@@ -110,7 +102,5 @@ spec:
       enabled: true
       persistence:
         data:
-          accessMode: ReadWriteOnce
           enabled: true
-          size: 1Gi
           type: emptyDir

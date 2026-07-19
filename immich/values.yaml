@@ -1,5 +1,5 @@
 ## This chart relies on the common library chart from bjw-s
-## You can find it at https://github.com/bjw-s-labs/helm-charts/tree/common-4.3.0/charts/library/common
+## You can find it at https://github.com/bjw-s-labs/helm-charts/tree/common-5.0.1/charts/library/common
 ## Refer there for more detail about the supported values
 
 # These entries are shared between all the Immich components
@@ -8,8 +8,6 @@ controllers:
   main:
     containers:
       main:
-        image:
-          tag: v2.6.3
         env:
           REDIS_HOSTNAME: '{{ printf "%s-valkey" .Release.Name }}'
           IMMICH_MACHINE_LEARNING_URL: '{{ printf "http://%s-machine-learning:3003" .Release.Name }}'
@@ -59,9 +57,7 @@ valkey:
   persistence:
     data:
       enabled: true
-      size: 1Gi
       type: emptyDir
-      accessMode: ReadWriteOnce
 
 # Immich components
 
@@ -74,13 +70,6 @@ server:
           image:
             repository: ghcr.io/immich-app/immich-server
             pullPolicy: IfNotPresent
-  service:
-    main:
-      type: NodePort
-      ports:
-        http:
-          port: 2283
-          nodePort: 32283
   ingress:
     main:
       enabled: false
@@ -110,6 +99,7 @@ machine-learning:
   persistence:
     cache:
       enabled: true
+      type: persistentVolumeClaim
       existingClaim: immich-library
       globalMounts:
         - path: /cache
