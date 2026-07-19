@@ -43,7 +43,7 @@ spec:
     immich:
       configuration:
         server:
-          externalDomain: https://immich.gsaab.dev:16384
+          externalDomain: https://immich.gsaab.dev
       configurationKind: ConfigMap
       metrics:
         enabled: true
