@@ -13,3 +13,4 @@ resources:
   - open-webui
   - searxng
   - mcp-github
+  - mcp-kubernetes
