@@ -35,15 +35,15 @@ spec:
     commonEnvVars:
       - name: WEBUI_URL
         value: "https://openwebui.gsaab.dev"
-      - name: ENABLE_RAG_WEB_SEARCH
+      - name: ENABLE_WEB_SEARCH
         value: "true"
-      - name: RAG_WEB_SEARCH_ENGINE
+      - name: WEB_SEARCH_ENGINE
         value: "searxng"
       - name: SEARXNG_QUERY_URL
         value: "http://searxng.searxng.svc.cluster.local:8080/search?q=<query>"
-      - name: RAG_WEB_SEARCH_RESULT_COUNT
+      - name: WEB_SEARCH_RESULT_COUNT
         value: "5"
-      - name: RAG_WEB_SEARCH_CONCURRENT_REQUESTS
+      - name: WEB_SEARCH_CONCURRENT_REQUESTS
         value: "5"
       - name: WEBUI_AUTH
         value: "true"
