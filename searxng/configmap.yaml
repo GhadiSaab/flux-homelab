@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: searxng-settings
+  namespace: searxng
+data:
+  settings.yml: |
+    use_default_settings: true
+
+    general:
+      instance_name: "open-webui-searxng"
+
+    server:
+      secret_key: "aad334ccd6c400379781305584db2bae8d103f5a7284ceece121367c76caf17e"
+      limiter: false
+      image_proxy: true
+
+    search:
+      formats:
+        - html
+        - json

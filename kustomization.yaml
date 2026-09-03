@@ -10,3 +10,5 @@ resources:
   - loki
   - sealed-secrets
   - holmesgpt
+  - open-webui
+  - searxng

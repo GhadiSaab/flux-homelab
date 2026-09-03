@@ -12,4 +12,6 @@ data:
     ingress:
       - hostname: immich.gsaab.dev
         service: http://immich-server.immich.svc.cluster.local:2283
+      - hostname: openwebui.gsaab.dev
+        service: http://open-webui.open-webui.svc.cluster.local:80
       - service: http_status:404
