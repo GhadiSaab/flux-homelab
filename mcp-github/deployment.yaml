@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcpo-github
+  namespace: mcp-github
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcpo-github
+  template:
+    metadata:
+      labels:
+        app: mcpo-github
+    spec:
+      containers:
+        - name: mcpo-github
+          image: ghcr.io/open-webui/mcpo:main
+          command: ["/bin/sh", "-c"]
+          args:
+            - mcpo --host 0.0.0.0 --port 8000 --api-key "$MCPO_API_KEY" -- npx -y @modelcontextprotocol/server-github
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MCPO_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mcpo-github-secrets
+                  key: mcpo-api-key
+            - name: GITHUB_PERSONAL_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: mcpo-github-secrets
+                  key: github-token
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
