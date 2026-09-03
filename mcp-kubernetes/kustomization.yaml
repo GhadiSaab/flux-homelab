@@ -4,3 +4,6 @@ resources:
   - namespace.yaml
   - ocirepo.yaml
   - helmrelease.yaml
+  - mcpo-sealedsecret.yaml
+  - mcpo-deployment.yaml
+  - mcpo-service.yaml

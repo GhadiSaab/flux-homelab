@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcpo-kubernetes
+  namespace: mcp-kubernetes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcpo-kubernetes
+  template:
+    metadata:
+      labels:
+        app: mcpo-kubernetes
+    spec:
+      containers:
+        - name: mcpo-kubernetes
+          image: ghcr.io/open-webui/mcpo:main
+          command: ["/bin/sh", "-c"]
+          args:
+            - mcpo --host 0.0.0.0 --port 8000 --api-key "$MCPO_API_KEY" --server-type streamable-http -- http://kubernetes-mcp-server.mcp-kubernetes.svc.cluster.local:8080/mcp
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MCPO_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mcpo-kubernetes-secrets
+                  key: mcpo-api-key
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
