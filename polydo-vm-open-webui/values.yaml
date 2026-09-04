@@ -1,0 +1,79 @@
+# Mirrors the open-webui HelmRelease values in github.com/GhadiSaab/flux-homelab
+# (open-webui/helmrelease.yaml), adapted for this standalone k3s cluster:
+#   - ingress added (traefik + cert-manager letsencrypt-prod, same pattern as do-board)
+#   - RAG embedding pointed at the openai-compatible backend instead of loading a
+#     local sentence-transformers model at boot, to fit this box's limited RAM
+#     (see RAG_EMBEDDING_ENGINE / *_AUTO_UPDATE below)
+ollama:
+  enabled: false
+
+pipelines:
+  enabled: false
+
+websocket:
+  manager: ""
+  redis:
+    enabled: false
+
+persistence:
+  enabled: true
+  size: 2Gi
+
+service:
+  type: ClusterIP
+  port: 80
+
+enableOpenaiApi: true
+openaiBaseApiUrl: "https://qwen36.do-2023.dev/v1"
+openaiApiKeyExistingSecret: openai-api-key
+openaiApiKeyExistingSecretKey: api-key
+
+ingress:
+  enabled: true
+  class: "traefik"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  host: "openwebui.polydo.dev"
+  tls: true
+
+resources:
+  requests:
+    memory: "300Mi"
+    cpu: "50m"
+  limits:
+    memory: "900Mi"
+
+commonEnvVars:
+  # WEBUI_URL is auto-derived by the chart from ingress.host + ingress.tls
+  - name: ENABLE_WEB_SEARCH
+    value: "true"
+  - name: WEB_SEARCH_ENGINE
+    value: "searxng"
+  - name: SEARXNG_QUERY_URL
+    value: "https://searxng.gsaab.dev/search?q=<query>"
+  - name: WEB_SEARCH_RESULT_COUNT
+    value: "5"
+  - name: WEB_SEARCH_CONCURRENT_REQUESTS
+    value: "5"
+  - name: WEBUI_AUTH
+    value: "true"
+  # RAM trim: skip the ~1.6GiB local embedding model load at boot (see note above)
+  - name: RAG_EMBEDDING_ENGINE
+    value: "openai"
+  - name: RAG_OPENAI_API_BASE_URL
+    value: "https://qwen36.do-2023.dev/v1"
+  - name: RAG_EMBEDDING_MODEL_AUTO_UPDATE
+    value: "false"
+  - name: RAG_RERANKING_MODEL_AUTO_UPDATE
+    value: "false"
+  - name: BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL
+    value: "true"
+  - name: ENABLE_RAG_WEB_LOADER
+    value: "false"
+
+extraEnvVars:
+  - name: RAG_OPENAI_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: openai-api-key
+        key: api-key
