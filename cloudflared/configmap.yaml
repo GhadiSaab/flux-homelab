@@ -14,4 +14,6 @@ data:
         service: http://immich-server.immich.svc.cluster.local:2283
       - hostname: openwebui.gsaab.dev
         service: http://open-webui.open-webui.svc.cluster.local:80
+      - hostname: searxng.gsaab.dev
+        service: http://searxng.searxng.svc.cluster.local:8080
       - service: http_status:404
