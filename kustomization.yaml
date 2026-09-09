@@ -10,6 +10,7 @@ resources:
   - loki
   - sealed-secrets
   - holmesgpt
+  - jellyfin
   - open-webui
   - searxng
   - mcp-github

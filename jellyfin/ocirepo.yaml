@@ -1,0 +1,12 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: jellyfin
+  namespace: jellyfin
+spec:
+  interval: 1m0s
+  provider: generic
+  ref:
+    semver: '>=3.0.0'
+  url: oci://ghcr.io/bjw-s-labs/helm/app-template

@@ -1,0 +1,69 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: jellyfin
+  namespace: jellyfin
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: jellyfin
+    namespace: jellyfin
+  interval: 1m0s
+  values:
+    controllers:
+      main:
+        pod:
+          securityContext:
+            supplementalGroups:
+              - 44
+              - 992
+        containers:
+          main:
+            image:
+              repository: ghcr.io/linuxserver/jellyfin
+              tag: latest
+            env:
+              PUID: "1000"
+              PGID: "1000"
+              TZ: Etc/UTC
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8096
+                  initialDelaySeconds: 30
+                  periodSeconds: 15
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8096
+                  initialDelaySeconds: 30
+                  periodSeconds: 15
+    service:
+      main:
+        controller: main
+        ports:
+          main:
+            port: 8096
+    persistence:
+      config:
+        existingClaim: jellyfin-config
+        globalMounts:
+          - path: /config
+      media:
+        type: hostPath
+        hostPath: /home/ghadi/jellyfin-media
+        globalMounts:
+          - path: /media
+      dri:
+        type: hostPath
+        hostPath: /dev/dri
+        globalMounts:
+          - path: /dev/dri

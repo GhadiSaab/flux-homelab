@@ -18,4 +18,6 @@ data:
         service: http://searxng.searxng.svc.cluster.local:8080
       - hostname: freellmapi.gsaab.dev
         service: http://freellmapi.freellmapi.svc.cluster.local:3001
+      - hostname: jellyfin.gsaab.dev
+        service: http://jellyfin.jellyfin.svc.cluster.local:8096
       - service: http_status:404
