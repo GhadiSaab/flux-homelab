@@ -29,9 +29,11 @@ spec:
       type: ClusterIP
       port: 80
     enableOpenaiApi: true
-    openaiBaseApiUrl: "https://qwen36.do-2023.dev/v1"
-    openaiApiKeyExistingSecret: openai-api-key
-    openaiApiKeyExistingSecretKey: api-key
+    openaiBaseApiUrls:
+      - "https://qwen36.do-2023.dev/v1"
+      - "http://100.71.139.53:3002/v1"
+    openaiApiKeysExistingSecret: freellmapi-secret
+    openaiApiKeysExistingSecretKey: api-keys
     commonEnvVars:
       - name: WEBUI_URL
         value: "https://openwebui.gsaab.dev"
@@ -47,3 +49,31 @@ spec:
         value: "5"
       - name: WEBUI_AUTH
         value: "true"
+      # FreeLLMAPI image generation (Cloudflare-routed, model must be 'auto')
+      - name: ENABLE_IMAGE_GENERATION
+        value: "true"
+      - name: IMAGE_GENERATION_ENGINE
+        value: "openai"
+      - name: IMAGES_OPENAI_API_BASE_URL
+        value: "http://100.71.139.53:3002/v1"
+      - name: IMAGES_OPENAI_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: freellmapi-secret
+            key: api-key
+      - name: IMAGE_GENERATION_MODEL
+        value: "auto"
+      # FreeLLMAPI text-to-speech (model must be 'auto')
+      - name: AUDIO_TTS_ENGINE
+        value: "openai"
+      - name: AUDIO_TTS_OPENAI_API_BASE_URL
+        value: "http://100.71.139.53:3002/v1"
+      - name: AUDIO_TTS_OPENAI_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: freellmapi-secret
+            key: api-key
+      - name: AUDIO_TTS_MODEL
+        value: "auto"
+      - name: AUDIO_TTS_VOICE
+        value: "alloy"

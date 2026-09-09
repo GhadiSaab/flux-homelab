@@ -4,4 +4,5 @@ resources:
   - namespace.yaml
   - helmrepository.yaml
   - sealedsecret.yaml
+  - freellmapi-sealedsecret.yaml
   - helmrelease.yaml
