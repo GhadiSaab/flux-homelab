@@ -31,7 +31,7 @@ spec:
     enableOpenaiApi: true
     openaiBaseApiUrls:
       - "https://qwen36.do-2023.dev/v1"
-      - "http://100.71.139.53:3002/v1"
+      - "http://freellmapi.freellmapi.svc.cluster.local:3001/v1"
     openaiApiKeysExistingSecret: freellmapi-secret
     openaiApiKeysExistingSecretKey: api-keys
     commonEnvVars:
@@ -55,7 +55,7 @@ spec:
       - name: IMAGE_GENERATION_ENGINE
         value: "openai"
       - name: IMAGES_OPENAI_API_BASE_URL
-        value: "http://100.71.139.53:3002/v1"
+        value: "http://freellmapi.freellmapi.svc.cluster.local:3001/v1"
       - name: IMAGES_OPENAI_API_KEY
         valueFrom:
           secretKeyRef:
@@ -67,7 +67,7 @@ spec:
       - name: AUDIO_TTS_ENGINE
         value: "openai"
       - name: AUDIO_TTS_OPENAI_API_BASE_URL
-        value: "http://100.71.139.53:3002/v1"
+        value: "http://freellmapi.freellmapi.svc.cluster.local:3001/v1"
       - name: AUDIO_TTS_OPENAI_API_KEY
         valueFrom:
           secretKeyRef:
