@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: freellmapi
+  namespace: freellmapi
+spec:
+  selector:
+    app: freellmapi
+  ports:
+    - port: 3001
+      targetPort: 3001

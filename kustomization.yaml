@@ -14,3 +14,4 @@ resources:
   - searxng
   - mcp-github
   - mcp-kubernetes
+  - freellmapi

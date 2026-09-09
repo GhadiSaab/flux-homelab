@@ -16,4 +16,6 @@ data:
         service: http://open-webui.open-webui.svc.cluster.local:80
       - hostname: searxng.gsaab.dev
         service: http://searxng.searxng.svc.cluster.local:8080
+      - hostname: freellmapi.gsaab.dev
+        service: http://freellmapi.freellmapi.svc.cluster.local:3001
       - service: http_status:404
