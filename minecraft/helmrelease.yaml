@@ -23,6 +23,7 @@ spec:
       serviceType: LoadBalancer
       externalTrafficPolicy: Local
       whitelist: false
+      enableLanVisibility: true
     persistence:
       dataDir:
         enabled: true
