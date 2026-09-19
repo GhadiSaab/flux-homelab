@@ -19,7 +19,7 @@ spec:
       serverName: 'Homelab Bedrock'
       gameMode: survival
       difficulty: easy
-      serverPort: 19132
+      serverPort: 39132
       serviceType: LoadBalancer
       externalTrafficPolicy: Local
       whitelist: false
