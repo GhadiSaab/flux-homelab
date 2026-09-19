@@ -1,0 +1,28 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: minecraft-bedrock
+  namespace: minecraft
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: minecraft-bedrock
+      version: '2.9.0'
+      sourceRef:
+        kind: HelmRepository
+        name: itzg
+        namespace: minecraft
+  values:
+    minecraftServer:
+      eula: 'TRUE'
+      serverName: 'Homelab Bedrock'
+      gameMode: survival
+      difficulty: easy
+      serverPort: 19132
+      serviceType: LoadBalancer
+      externalTrafficPolicy: Local
+    persistence:
+      dataDir:
+        enabled: true
+        Size: 10Gi

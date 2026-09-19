@@ -16,3 +16,4 @@ resources:
   - mcp-github
   - mcp-kubernetes
   - freellmapi
+  - minecraft
