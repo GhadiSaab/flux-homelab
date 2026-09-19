@@ -22,7 +22,19 @@ spec:
       serverPort: 19132
       serviceType: LoadBalancer
       externalTrafficPolicy: Local
+      whitelist: false
     persistence:
       dataDir:
         enabled: true
         Size: 10Gi
+    # Bedrock downloads the server binary on first boot (~60s+),
+    # default 30s delays kill it before it starts. Give it room.
+    livenessProbe:
+      initialDelaySeconds: 120
+    readinessProbe:
+      initialDelaySeconds: 120
+    startupProbe:
+      enabled: true
+      initialDelaySeconds: 30
+      failureThreshold: 60
+      periodSeconds: 10
