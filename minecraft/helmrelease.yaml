@@ -31,6 +31,7 @@ spec:
     # port, invisible to Add Server). Force classic RakNet UDP for direct IP joins.
     extraEnv:
       TRANSPORT: raknet
+      ALLOW_LIST: "false"
     # Bedrock downloads the server binary on first boot (~60s+),
     # default 30s delays kill it before it starts. Give it room.
     livenessProbe:
