@@ -26,6 +26,8 @@ spec:
       motd: 'Homelab Better MC'
       # Fresh world: the earlier vanilla 26.3 "world" cannot load on 1.21.1.
       levelName: bmc
+      # The server pack ships its own server.properties; make ours win.
+      overrideServerProperties: true
       levelType: 'bclib:normal'
       gameMode: survival
       difficulty: easy
@@ -38,6 +40,7 @@ spec:
     # Better MC [FABRIC] BMC3 v45 official server pack (CurseForge project 826731, file 8051997).
     extraEnv:
       FABRIC_LOADER_VERSION: '0.19.2'
+      LEVEL: bmc
       GENERIC_PACK: 'https://edge.forgecdn.net/files/8051/997/BMC3_Server_Pack_v45.zip'
     resources:
       requests:
