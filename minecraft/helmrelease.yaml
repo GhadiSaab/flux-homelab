@@ -17,6 +17,8 @@ spec:
     minecraftServer:
       eula: 'TRUE'
       serverName: 'Homelab Bedrock'
+      # Previous world "level" is kept on the PVC; set back to switch to it.
+      levelName: world2
       gameMode: survival
       difficulty: easy
       serverPort: 39132
