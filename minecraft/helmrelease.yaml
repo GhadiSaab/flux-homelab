@@ -5,42 +5,51 @@ metadata:
   namespace: minecraft
 spec:
   interval: 10m
+  # First boot downloads a ~600MB server pack and loads 300+ mods.
+  timeout: 20m
   chart:
     spec:
       chart: minecraft
-      version: 5.2.0
+      version: '5.2.0'
       sourceRef:
         kind: HelmRepository
         name: itzg
         namespace: minecraft
   values:
+    image:
+      # Better MC 1.21.1 targets Java 21.
+      tag: java21
     minecraftServer:
-      eula: TRUE
-      type: VANILLA
-      version: LATEST
-      motd: Homelab Java
-      levelName: world
+      eula: 'TRUE'
+      type: FABRIC
+      version: '1.21.1'
+      motd: 'Homelab Better MC'
+      # Fresh world: the earlier vanilla 26.3 "world" cannot load on 1.21.1.
+      levelName: bmc
+      levelType: 'bclib:normal'
       gameMode: survival
       difficulty: easy
       maxPlayers: 10
       onlineMode: true
-      memory: 3G
+      memory: 4G
       serviceType: LoadBalancer
       servicePort: 25565
       externalTrafficPolicy: Local
+    # Better MC [FABRIC] BMC3 v45 official server pack (CurseForge project 826731, file 8051997).
+    extraEnv:
+      FABRIC_LOADER_VERSION: '0.19.2'
+      GENERIC_PACK: 'https://edge.forgecdn.net/files/8051/997/BMC3_Server_Pack_v45.zip'
     resources:
       requests:
         memory: 1Gi
         cpu: 500m
       limits:
-        memory: 4Gi
+        memory: 6Gi
     persistence:
       dataDir:
         enabled: true
         Size: 10Gi
-    # First boot downloads the server jar and generates the world;
-    # default probes kill it before it finishes.
     startupProbe:
       enabled: true
-      failureThreshold: 60
+      failureThreshold: 90
       periodSeconds: 10
