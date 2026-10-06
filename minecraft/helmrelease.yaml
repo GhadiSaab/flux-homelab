@@ -1,48 +1,46 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: minecraft-bedrock
+  name: minecraft-java
   namespace: minecraft
 spec:
   interval: 10m
   chart:
     spec:
-      chart: minecraft-bedrock
-      version: '2.9.0'
+      chart: minecraft
+      version: 5.2.0
       sourceRef:
         kind: HelmRepository
         name: itzg
         namespace: minecraft
   values:
     minecraftServer:
-      eula: 'TRUE'
-      serverName: 'Homelab Bedrock'
-      # Previous world "level" is kept on the PVC; set back to switch to it.
-      levelName: world2
+      eula: TRUE
+      type: VANILLA
+      version: LATEST
+      motd: Homelab Java
+      levelName: world
       gameMode: survival
       difficulty: easy
-      serverPort: 39132
+      maxPlayers: 10
+      onlineMode: true
+      memory: 3G
       serviceType: LoadBalancer
+      servicePort: 25565
       externalTrafficPolicy: Local
-      whitelist: false
-      enableLanVisibility: true
+    resources:
+      requests:
+        memory: 3Gi
+        cpu: 500m
+      limits:
+        memory: 4Gi
     persistence:
       dataDir:
         enabled: true
         Size: 10Gi
-    # BDS 1.26+ defaults to the WebRTC 'nethernet' transport (no public UDP
-    # port, invisible to Add Server). Force classic RakNet UDP for direct IP joins.
-    extraEnv:
-      TRANSPORT: raknet
-      ALLOW_LIST: "false"
-    # Bedrock downloads the server binary on first boot (~60s+),
-    # default 30s delays kill it before it starts. Give it room.
-    livenessProbe:
-      initialDelaySeconds: 120
-    readinessProbe:
-      initialDelaySeconds: 120
+    # First boot downloads the server jar and generates the world;
+    # default probes kill it before it finishes.
     startupProbe:
       enabled: true
-      initialDelaySeconds: 30
       failureThreshold: 60
       periodSeconds: 10
