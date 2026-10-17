@@ -1,0 +1,79 @@
+# Label-driven AI bot for the Omni GitLab project (source: github.com/GhadiSaab/omni-agent).
+# The image is built locally and imported into k3s containerd (no registry),
+# hence imagePullPolicy: Never.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: omni-agent
+  namespace: omni-agent
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: omni-agent
+  template:
+    metadata:
+      labels:
+        app: omni-agent
+    spec:
+      # Public DNS returns an address that is unreachable from outside the
+      # university; this one (from the school VPN DNS) answers publicly.
+      hostAliases:
+        - ip: "162.38.112.154"
+          hostnames:
+            - gitlab.polytech.umontpellier.fr
+      containers:
+        - name: omni-agent
+          image: docker.io/library/omni-agent:0.1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: GITLAB_URL
+              value: https://gitlab.polytech.umontpellier.fr
+            - name: GITLAB_PROJECT_ID
+              value: "5609"
+            - name: LLM_BASE_URL
+              value: http://192.168.1.89:3040/opencode/v1
+            - name: LLM_MODEL
+              value: deepseek-v4.1-flash-free
+            - name: POLL_INTERVAL
+              value: "120"
+            - name: WORK_DIR
+              value: /work
+          envFrom:
+            - secretRef:
+                name: omni-agent-secrets
+          volumeMounts:
+            - name: work
+              mountPath: /work
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              memory: 3Gi
+          # Runs as root only to drop the coding agent to uid 1001 (setpriv),
+          # so the agent cannot read this process's environment.
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+              add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "SETUID", "SETGID"]
+      volumes:
+        - name: work
+          emptyDir:
+            sizeLimit: 5Gi

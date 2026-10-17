@@ -18,3 +18,4 @@ resources:
   - mcp-kubernetes
   - freellmapi
   - minecraft
+  - omni-agent
