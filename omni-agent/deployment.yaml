@@ -26,7 +26,7 @@ spec:
             - gitlab.polytech.umontpellier.fr
       containers:
         - name: omni-agent
-          image: docker.io/library/omni-agent:0.2.0
+          image: docker.io/library/omni-agent:0.4.0
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
@@ -35,13 +35,21 @@ spec:
               value: https://gitlab.polytech.umontpellier.fr
             - name: GITLAB_PROJECT_ID
               value: "5609"
+            # MR descriptions and PR-Agent reviews call an OpenAI-compatible API directly:
+            # FreeLLMAPI's DeepSeek, in-cluster.
             - name: LLM_BASE_URL
-              value: http://192.168.1.89:3040/opencode/v1
+              value: http://freellmapi.freellmapi.svc.cluster.local:3001/v1
             - name: LLM_MODEL
-              value: deepseek-v4.1-flash-free
-            # Tried in order when the previous model is rate-limited.
+              value: deepseek-v4-flash
             - name: LLM_FALLBACK_MODELS
-              value: glm-5.3-flash-free,mimo-v2.6-flash-free,nemotron-3.5-super-vl-free,beam-free,big-pickle,longcat-2.5-preview-free,space-bunny-free
+              value: ""
+            # The implement loop runs inside opencode, on opencode's own free DeepSeek.
+            - name: PLANNER_MODELS
+              value: opencode/deepseek-v4.1-flash-free
+            - name: IMPLEMENTER_MODELS
+              value: opencode/deepseek-v4.1-flash-free
+            - name: REVIEWER_MODELS
+              value: opencode/deepseek-v4.1-flash-free
             - name: POLL_INTERVAL
               value: "120"
             - name: WORK_DIR
