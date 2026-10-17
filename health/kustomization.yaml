@@ -3,7 +3,4 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - pvc.yaml
-  - fileserver.yaml
-  - sync-script-configmap.yaml
-  - cronjob.yaml
-  - ghealth-oauth-sealedsecret.yaml
+  # Application removed; retain stored Health data for recovery.
