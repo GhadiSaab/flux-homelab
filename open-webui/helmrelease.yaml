@@ -9,11 +9,14 @@ spec:
   chart:
     spec:
       chart: open-webui
+      version: "17.0.0"
       sourceRef:
         kind: HelmRepository
         name: open-webui
         namespace: flux-system
   values:
+    image:
+      tag: "v0.12.3"
     ollama:
       enabled: false
     pipelines:
@@ -35,6 +38,11 @@ spec:
     openaiApiKeysExistingSecret: freellmapi-secret
     openaiApiKeysExistingSecretKey: api-keys
     commonEnvVars:
+      - name: WEBUI_SECRET_KEY
+        valueFrom:
+          secretKeyRef:
+            name: open-webui-session
+            key: WEBUI_SECRET_KEY
       - name: WEBUI_URL
         value: "https://openwebui.gsaab.dev"
       - name: ENABLE_WEB_SEARCH
