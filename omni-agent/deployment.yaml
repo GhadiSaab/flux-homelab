@@ -18,6 +18,8 @@ spec:
       labels:
         app: omni-agent
     spec:
+      # Agents have a full shell: give them no Kubernetes credentials.
+      automountServiceAccountToken: false
       # Public DNS returns an address that is unreachable from outside the
       # university; this one (from the school VPN DNS) answers publicly.
       hostAliases:
@@ -26,7 +28,7 @@ spec:
             - gitlab.polytech.umontpellier.fr
       containers:
         - name: omni-agent
-          image: docker.io/library/omni-agent:0.4.0
+          image: docker.io/library/omni-agent:0.5.0
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
