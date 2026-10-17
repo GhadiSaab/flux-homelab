@@ -29,6 +29,23 @@ spec:
         namespace: flux-system
   values:
     deploymentMode: SingleBinary
+    chunksCache:
+      allocatedMemory: 192
+      writebackSizeLimit: 32MB
+      resources:
+        requests:
+          cpu: 25m
+          memory: 256Mi
+        limits:
+          memory: 256Mi
+    resultsCache:
+      allocatedMemory: 192
+      resources:
+        requests:
+          cpu: 25m
+          memory: 256Mi
+        limits:
+          memory: 256Mi
     loki:
       auth_enabled: false
       commonConfig:

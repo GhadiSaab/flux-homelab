@@ -3,3 +3,11 @@ kind: Kustomization
 resources:
   - grafana-datasource.yaml
   - loki.yaml
+  - alloy.yaml
+configMapGenerator:
+  - name: alloy-config
+    namespace: loki
+    files:
+      - config.alloy
+generatorOptions:
+  disableNameSuffixHash: true
