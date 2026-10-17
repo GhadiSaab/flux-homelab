@@ -48,8 +48,9 @@ spec:
               value: opencode/deepseek-v4.1-flash-free
             - name: IMPLEMENTER_MODELS
               value: opencode/deepseek-v4.1-flash-free
+            # A different model reviews, so the two don't share blind spots.
             - name: REVIEWER_MODELS
-              value: opencode/deepseek-v4.1-flash-free
+              value: opencode/glm-5.3-flash-free,opencode/deepseek-v4.1-flash-free
             - name: POLL_INTERVAL
               value: "120"
             - name: WORK_DIR
