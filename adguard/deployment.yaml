@@ -16,6 +16,10 @@ spec:
       labels:
         app: adguard
     spec:
+      # Host network so DNS is reachable on the node's IPv6 address too (the
+      # cluster is IPv4 single-stack) and AdGuard sees real client IPs.
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: adguard
           image: docker.io/adguard/adguardhome:v0.107.79

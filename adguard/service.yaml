@@ -4,9 +4,9 @@ metadata:
   name: adguard
   namespace: adguard
 spec:
-  type: LoadBalancer
-  # Keep real client IPs so AdGuard can show per-device stats.
-  externalTrafficPolicy: Local
+  # LAN clients reach the pod directly via hostNetwork (192.168.1.89 and the
+  # node's IPv6 address); this Service is only for in-cluster access.
+  type: ClusterIP
   selector:
     app: adguard
   ports:
