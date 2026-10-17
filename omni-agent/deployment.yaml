@@ -26,7 +26,7 @@ spec:
             - gitlab.polytech.umontpellier.fr
       containers:
         - name: omni-agent
-          image: docker.io/library/omni-agent:0.1.5
+          image: docker.io/library/omni-agent:0.1.6
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
