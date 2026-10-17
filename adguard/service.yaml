@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: adguard
+  namespace: adguard
+spec:
+  type: LoadBalancer
+  # Keep real client IPs so AdGuard can show per-device stats.
+  externalTrafficPolicy: Local
+  selector:
+    app: adguard
+  ports:
+    - name: dns-udp
+      port: 53
+      targetPort: 53
+      protocol: UDP
+    - name: dns-tcp
+      port: 53
+      targetPort: 53
+      protocol: TCP
+    - name: http
+      port: 3000
+      targetPort: 3000
+      protocol: TCP

@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adguard
+  namespace: adguard
+spec:
+  replicas: 1
+  # RWO volume + host port 53: never run two pods at once.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: adguard
+  template:
+    metadata:
+      labels:
+        app: adguard
+    spec:
+      containers:
+        - name: adguard
+          image: docker.io/adguard/adguardhome:v0.107.79
+          ports:
+            - name: dns-udp
+              containerPort: 53
+              protocol: UDP
+            - name: dns-tcp
+              containerPort: 53
+              protocol: TCP
+            - name: http
+              containerPort: 3000
+          volumeMounts:
+            # Config (AdGuardHome.yaml, incl. blocklists + admin user) lives on
+            # the PVC; it is set up through the web UI/API, not stored in git.
+            - name: data
+              mountPath: /opt/adguardhome/conf
+              subPath: conf
+            - name: data
+              mountPath: /opt/adguardhome/work
+              subPath: work
+          readinessProbe:
+            tcpSocket:
+              port: 53
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: adguard-data
