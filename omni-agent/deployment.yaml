@@ -26,7 +26,7 @@ spec:
             - gitlab.polytech.umontpellier.fr
       containers:
         - name: omni-agent
-          image: docker.io/library/omni-agent:0.1.7
+          image: docker.io/library/omni-agent:0.2.0
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
@@ -46,6 +46,12 @@ spec:
               value: "120"
             - name: WORK_DIR
               value: /work
+            # ai::implement loop: rounds of implement -> lint/format/typecheck -> review
+            # until the reviewer's score reaches LOOP_THRESHOLD.
+            - name: LOOP_THRESHOLD
+              value: "80"
+            - name: LOOP_MAX_ROUNDS
+              value: "4"
           envFrom:
             - secretRef:
                 name: omni-agent-secrets
@@ -68,7 +74,7 @@ spec:
               cpu: 100m
               memory: 384Mi
             limits:
-              memory: 3Gi
+              memory: 6Gi
           # Runs as root only to drop the coding agent to uid 1001 (setpriv),
           # so the agent cannot read this process's environment.
           securityContext:
@@ -79,4 +85,5 @@ spec:
       volumes:
         - name: work
           emptyDir:
-            sizeLimit: 5Gi
+            # Holds the repo checkout, node_modules and the shared pnpm store.
+            sizeLimit: 20Gi
