@@ -15,6 +15,8 @@ spec:
         name: itzg
         namespace: minecraft
   values:
+    # Paused: retain the world PVC while stopping the server.
+    replicaCount: 0
     image:
       tag: java21
     minecraftServer:
@@ -30,9 +32,8 @@ spec:
       maxPlayers: 10
       onlineMode: true
       memory: 3G
-      serviceType: LoadBalancer
+      serviceType: ClusterIP
       servicePort: 25565
-      externalTrafficPolicy: Local
     extraEnv:
       # Wipe the leftover Better MC (Fabric) mods before installing ours.
       REMOVE_OLD_MODS: 'TRUE'
