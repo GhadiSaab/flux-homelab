@@ -26,7 +26,7 @@ spec:
             - gitlab.polytech.umontpellier.fr
       containers:
         - name: omni-agent
-          image: docker.io/library/omni-agent:0.1.4
+          image: docker.io/library/omni-agent:0.1.5
           imagePullPolicy: Never
           ports:
             - containerPort: 8080
@@ -41,7 +41,7 @@ spec:
               value: deepseek-v4.1-flash-free
             # Tried in order when the previous model is rate-limited.
             - name: LLM_FALLBACK_MODELS
-              value: glm-5.3-flash-free,mimo-v2.6-flash-free,nemotron-3.5-super-vl-free
+              value: glm-5.3-flash-free,mimo-v2.6-flash-free,nemotron-3.5-super-vl-free,beam-free,big-pickle,longcat-2.5-preview-free,space-bunny-free
             - name: POLL_INTERVAL
               value: "120"
             - name: WORK_DIR
