@@ -26,4 +26,6 @@ data:
         service: http://freellmapi.freellmapi.svc.cluster.local:3001
       - hostname: jellyfin.gsaab.dev
         service: http://jellyfin.jellyfin.svc.cluster.local:8096
+      - hostname: gsaab.dev
+        service: http://portfolio.portfolio.svc.cluster.local:80
       - service: http_status:404
