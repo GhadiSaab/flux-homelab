@@ -29,7 +29,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: website
-          image: ghcr.io/ghadisaab/housy@sha256:df6f8e426a67c7634b6e2708627ee237e214a4aad51b733016a64456c026ebcb
+          image: ghcr.io/ghadisaab/housy@sha256:543c719281178ac42a8b853327132cc9d1e228d85963d0127e0092c5788806f5
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
