@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - grafana-datasource.yaml
   - loki.yaml
+  - loki-servicemonitor.yaml
   - alloy.yaml
 configMapGenerator:
   - name: alloy-config

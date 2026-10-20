@@ -30,3 +30,41 @@ spec:
           annotations:
             summary: "Tempo OOMKilled: {{ $labels.pod }}"
             description: "Tempo container {{ $labels.pod }} restarted after an OOM kill in the last 10 minutes. Check WAL replay and block flush memory against the container limit."
+        - alert: TempoHighMemory
+          expr: |
+            max by (namespace, pod, container) (
+              container_memory_working_set_bytes{namespace="tracing",container="tempo"}
+            )
+            /
+            max by (namespace, pod, container) (
+              kube_pod_container_resource_limits{namespace="tracing",container="tempo",resource="memory"}
+            ) > 0.9
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Tempo memory above 90% of limit: {{ $labels.pod }}"
+            description: "Tempo container {{ $labels.pod }} has used more than 90% of its 2Gi memory limit for 10 minutes. Early warning before an OOM kill; check WAL replay and block flush memory."
+    - name: custom.loki
+      rules:
+        - alert: LokiTargetDown
+          expr: |
+            up{job="loki"} == 0
+            or absent(up{job="loki"})
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Loki target is down"
+            description: "Prometheus has not scraped the Loki metrics endpoint for 10 minutes. Check the loki Service, loki-0 readiness, and the Loki ServiceMonitor."
+        - alert: LokiNoIngest
+          expr: |
+            (sum by (job) (rate(loki_distributor_lines_received_total[5m])) == 0)
+            and on (job)
+            (up{job="loki"} == 1)
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Loki is not ingesting log lines"
+            description: "Loki has received zero log lines over the last 5 minutes for 15 minutes while its scrape target is up. Check Alloy delivery and Loki distributor health."
