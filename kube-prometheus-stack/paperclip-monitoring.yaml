@@ -74,7 +74,7 @@ spec:
           annotations:
             summary: Paperclip host metrics have stopped refreshing
         - alert: PaperclipMetricsTargetDown
-          expr: up{service="paperclip-host"} == 0
+          expr: (up{service="paperclip-host"} == 0) or absent(up{service="paperclip-host"})
           for: 3m
           labels:
             severity: warning
