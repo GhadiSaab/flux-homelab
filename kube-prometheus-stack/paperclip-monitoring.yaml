@@ -87,6 +87,20 @@ spec:
             severity: warning
           annotations:
             summary: Paperclip encrypted backup is older than 30 hours
+        - alert: PaperclipBackupFailed
+          expr: paperclip_backup_last_run_success == 0
+          for: 3m
+          labels:
+            severity: warning
+          annotations:
+            summary: The last Paperclip encrypted backup failed
+        - alert: PaperclipRestoreVerificationFailed
+          expr: paperclip_restore_last_run_success == 0
+          for: 3m
+          labels:
+            severity: warning
+          annotations:
+            summary: The last isolated Paperclip restore verification failed
         - alert: PaperclipRestoreVerificationStale
           expr: time() - paperclip_restore_last_verified_timestamp_seconds > 777600
           for: 15m

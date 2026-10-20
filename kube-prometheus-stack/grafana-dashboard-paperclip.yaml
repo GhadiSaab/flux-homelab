@@ -310,7 +310,7 @@ data:
         {
           "id": 5,
           "title": "Agents by runtime",
-          "type": "barchart",
+          "type": "stat",
           "gridPos": {
             "x": 0,
             "y": 4,
@@ -326,7 +326,7 @@ data:
               "refId": "A",
               "expr": "sum by(adapter)(paperclip_agents)",
               "legendFormat": "{{adapter}}",
-              "instant": false
+              "instant": true
             }
           ],
           "fieldConfig": {
