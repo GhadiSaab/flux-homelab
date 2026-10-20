@@ -29,4 +29,8 @@ data:
         service: http://jellyfin.jellyfin.svc.cluster.local:8096
       - hostname: gsaab.dev
         service: http://portfolio.portfolio.svc.cluster.local:80
+      - hostname: paperclip.gsaab.dev
+        service: http://192.168.1.89:8088
+        originRequest:
+          httpHostHeader: paperclip.gsaab.dev
       - service: http_status:404
