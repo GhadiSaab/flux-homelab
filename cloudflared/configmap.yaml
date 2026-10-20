@@ -22,12 +22,6 @@ data:
       - hostname: opencode.gsaab.dev
         service: http://192.168.1.89:3040
       - hostname: freellmapi.gsaab.dev
-        path: ^/omni-agent/(webhook|healthz)$
-        service: http://omni-agent.omni-agent.svc.cluster.local:8080
-      - hostname: freellmapi.gsaab.dev
-        path: ^/opencode(/.*)?$
-        service: http://192.168.1.89:3040
-      - hostname: freellmapi.gsaab.dev
         service: http://freellmapi.freellmapi.svc.cluster.local:3001
       - hostname: grafana.gsaab.dev
         service: http://kube-prometheus-stack-grafana.monitoring-ns.svc.cluster.local:80
