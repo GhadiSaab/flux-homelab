@@ -16,6 +16,11 @@ data:
         service: http://open-webui.open-webui.svc.cluster.local:80
       - hostname: searxng.gsaab.dev
         service: http://searxng.searxng.svc.cluster.local:8080
+      - hostname: omni-agent.gsaab.dev
+        path: ^/(webhook|healthz)$
+        service: http://omni-agent.omni-agent.svc.cluster.local:8080
+      - hostname: opencode.gsaab.dev
+        service: http://192.168.1.89:3040
       - hostname: freellmapi.gsaab.dev
         path: ^/omni-agent/(webhook|healthz)$
         service: http://omni-agent.omni-agent.svc.cluster.local:8080
