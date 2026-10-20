@@ -37,9 +37,6 @@ spec:
         extra:
           - name: alloy-state
             mountPath: /var/lib/alloy
-          - name: promtail-positions
-            mountPath: /run/promtail
-            readOnly: true
       resources:
         requests:
           cpu: 50m
@@ -54,7 +51,3 @@ spec:
             hostPath:
               path: /var/lib/alloy
               type: DirectoryOrCreate
-          - name: promtail-positions
-            hostPath:
-              path: /run/promtail
-              type: Directory

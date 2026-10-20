@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tracing
+  labels:
+    # Beyla runs privileged (eBPF), so the namespace has to allow it.
+    pod-security.kubernetes.io/enforce: privileged

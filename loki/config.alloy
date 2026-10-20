@@ -89,7 +89,6 @@ loki.source.file "kubernetes_pods" {
 	file_match {
 		enabled = true
 	}
-	legacy_positions_file = "/run/promtail/positions.yaml"
 }
 
 loki.write "default" {

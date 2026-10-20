@@ -9,6 +9,7 @@ resources:
   - infra
   - kube-prometheus-stack
   - loki
+  - tracing
   - sealed-secrets
   - holmesgpt
   - jellyfin
