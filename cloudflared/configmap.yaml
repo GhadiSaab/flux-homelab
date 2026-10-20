@@ -24,6 +24,8 @@ data:
         service: http://192.168.1.89:3040
       - hostname: freellmapi.gsaab.dev
         service: http://freellmapi.freellmapi.svc.cluster.local:3001
+      - hostname: grafana.gsaab.dev
+        service: http://kube-prometheus-stack-grafana.monitoring-ns.svc.cluster.local:80
       - hostname: jellyfin.gsaab.dev
         service: http://jellyfin.jellyfin.svc.cluster.local:8096
       - hostname: gsaab.dev
