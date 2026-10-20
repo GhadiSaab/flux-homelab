@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - tempo.yaml
+  - tempo-servicemonitor.yaml
   - beyla.yaml
   - grafana-datasource.yaml
   - grafana-dashboard.yaml
