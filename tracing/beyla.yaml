@@ -28,6 +28,8 @@ spec:
           kubernetes:
             enable: true
         discovery:
+          instrument:
+            - k8s_namespace: "*"
           exclude_instrument:
             - k8s_namespace: "{kube-system,kube-public,kube-node-lease,flux-system,cert-manager,cnpg-system,tracing,monitoring-ns,loki}"
         otel_traces_export:
