@@ -6,3 +6,5 @@ resources:
   - grafana-sealed-secret.yaml
   - helmrelease.yaml
   - prometheusrule-custom.yaml
+  - paperclip-monitoring.yaml
+  - grafana-dashboard-paperclip.yaml

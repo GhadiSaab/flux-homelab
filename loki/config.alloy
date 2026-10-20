@@ -97,3 +97,12 @@ loki.write "default" {
 	}
 	external_labels = {}
 }
+
+// Host management-plane logs, selected without collecting other user services.
+loki.source.journal "paperclip" {
+	path = "/var/log/journal"
+	matches = "_SYSTEMD_USER_UNIT=paperclipai-homelab.service"
+	max_age = "1h"
+	labels = {service_name = "paperclip", host = "gsaab"}
+	forward_to = [loki.write.default.receiver]
+}

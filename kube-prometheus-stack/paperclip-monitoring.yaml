@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: paperclip-host
+  namespace: monitoring-ns
+  labels:
+    app.kubernetes.io/name: paperclip-host
+spec:
+  ports:
+    - name: metrics
+      port: 9118
+      targetPort: 9118
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: paperclip-host
+  namespace: monitoring-ns
+subsets:
+  - addresses:
+      - ip: 192.168.1.89
+    ports:
+      - name: metrics
+        port: 9118
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: paperclip-host
+  namespace: monitoring-ns
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: paperclip-host
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 60s
+      scrapeTimeout: 10s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: paperclip-operations
+  namespace: monitoring-ns
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: paperclip.operations
+      rules:
+        - alert: PaperclipControlPlaneDown
+          expr: paperclip_up == 0
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: Paperclip management control plane is unavailable
+            description: Check systemctl --user status paperclipai-homelab on gsaab. Use SSH when the cluster tunnel is unavailable.
+        - alert: PaperclipDatabaseDown
+          expr: paperclip_database_up == 0
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: Paperclip PostgreSQL queries are failing
+        - alert: PaperclipMetricsStale
+          expr: time() - paperclip_metrics_generated_timestamp_seconds > 180
+          for: 3m
+          labels:
+            severity: warning
+          annotations:
+            summary: Paperclip host metrics have stopped refreshing
+        - alert: PaperclipMetricsTargetDown
+          expr: up{service="paperclip-host"} == 0
+          for: 3m
+          labels:
+            severity: warning
+          annotations:
+            summary: Prometheus cannot scrape the Paperclip host endpoint
+        - alert: PaperclipBackupStale
+          expr: time() - paperclip_backup_last_success_timestamp_seconds > 108000
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: Paperclip encrypted backup is older than 30 hours
+        - alert: PaperclipRestoreVerificationStale
+          expr: time() - paperclip_restore_last_verified_timestamp_seconds > 777600
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: Paperclip isolated restore has not been verified for nine days
+        - alert: PaperclipAgentInError
+          expr: sum(paperclip_agents{status="error"}) > 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: A Paperclip agent has remained in an error state

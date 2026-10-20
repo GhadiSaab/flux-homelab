@@ -11,7 +11,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cloudflared-config: "560b3aa59734b4db6bbd15c99b4257deefaa1de0c93c8cfb8ee8ef5feb57b116"
+        checksum/cloudflared-config: "6734ddcfd0d73dda04481464522a2474b88269076b138228142407754b8f7988"
       labels:
         app.kubernetes.io/name: cloudflared
     spec:
