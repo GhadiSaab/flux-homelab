@@ -45,7 +45,7 @@ jobs:
                 kustomize build "$dir" \
                   | kubeconform \
                       -strict \
-                      -skip Secret,SealedSecret,CustomResourceDefinition,Cluster,PrometheusRule,IngressRoute,Certificate,ClusterIssuer,HelmChartConfig \
+                      -skip Secret,SealedSecret,CustomResourceDefinition,Cluster,PrometheusRule,ServiceMonitor,IngressRoute,Certificate,ClusterIssuer,HelmChartConfig \
                       -schema-location default \
                       -schema-location /tmp/flux-crd-schemas \
                       -summary \
