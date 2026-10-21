@@ -27,12 +27,18 @@ spec:
       metricsGenerator:
         enabled: true
         remoteWriteUrl: http://kube-prometheus-stack-prometheus.monitoring-ns:9090/api/v1/write
+        # Powers TraceQL metrics queries and the Grafana Traces Drilldown app.
+        # filter_server_spans=false includes client/DB spans, not just server spans.
+        processor:
+          local_blocks:
+            filter_server_spans: false
       overrides:
         defaults:
           metrics_generator:
             processors:
               - service-graphs
               - span-metrics
+              - local-blocks
     persistence:
       enabled: true
       storageClassName: local-path
