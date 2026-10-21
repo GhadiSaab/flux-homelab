@@ -26,7 +26,7 @@ data:
       - hostname: grafana.gsaab.dev
         service: http://kube-prometheus-stack-grafana.monitoring-ns.svc.cluster.local:80
       - hostname: traces.gsaab.dev
-        service: http://traces-redirect.tracing.svc.cluster.local:80
+        service: http://jaeger.tracing.svc.cluster.local:16686
       - hostname: jellyfin.gsaab.dev
         service: http://jellyfin.jellyfin.svc.cluster.local:8096
       - hostname: gsaab.dev

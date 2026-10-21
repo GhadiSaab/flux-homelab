@@ -6,5 +6,5 @@ resources:
   - tempo-servicemonitor.yaml
   - beyla.yaml
   - grafana-datasource.yaml
-  - traces-redirect.yaml
+  - jaeger.yaml
   - grafana-dashboard.yaml
