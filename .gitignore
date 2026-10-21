@@ -1,2 +1,4 @@
 sealed-secrets-master-key-backup.yaml
 minecraft/world/
+__pycache__/
+*.pyc

@@ -1,0 +1,180 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-diagnostics
+  namespace: mcp-kubernetes
+  labels:
+    app.kubernetes.io/name: mcp-diagnostics
+    app.kubernetes.io/part-of: homelab-observability
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mcp-diagnostics
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mcp-diagnostics
+        app.kubernetes.io/part-of: homelab-observability
+    spec:
+      serviceAccountName: mcp-diagnostics
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 20
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: upstream
+          image: quay.io/containers/kubernetes_mcp_server@sha256:4d4b24d951becc0bcb975df239d1834e0b2be88eafcf2b8325a7ab3080854719
+          args:
+            - --port
+            - "8081"
+            - --bind-address
+            - 127.0.0.1
+            - --stateless
+            - --read-only
+            - --disable-destructive
+            - --disable-multi-cluster
+            - --toolsets
+            - core
+            - --log-level
+            - "1"
+          env:
+            - name: HOME
+              value: /tmp
+            - name: TMPDIR
+              value: /tmp
+          ports:
+            - name: upstream
+              containerPort: 8081
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 25m
+              memory: 96Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          volumeMounts:
+            - name: kube-api-access
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+        - name: gateway
+          image: python:3.12-slim@sha256:804ddf3251a60bbf9c92e73b7566c40428d54d0e79d3428194edf40da6521286
+          command:
+            - python
+            - -u
+            - /opt/gateway/gateway.py
+          env:
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: HOME
+              value: /tmp
+            - name: TMPDIR
+              value: /tmp
+            - name: PORT
+              value: "8080"
+            - name: UPSTREAM_URL
+              value: http://127.0.0.1:8081/mcp
+            - name: UPSTREAM_HEALTH_URL
+              value: http://127.0.0.1:8081/healthz
+            - name: AUTH_TOKENS_FILE
+              value: /etc/mcp-auth/tokens
+            - name: MAX_RESPONSE_BYTES
+              value: "262144"
+            - name: MAX_UPSTREAM_BYTES
+              value: "2097152"
+            - name: UPSTREAM_TIMEOUT_SECONDS
+              value: "15"
+            - name: RATE_LIMIT_PER_MINUTE
+              value: "60"
+            - name: RATE_LIMIT_BURST
+              value: "10"
+            - name: MAX_CONCURRENCY
+              value: "4"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 2
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 20m
+              memory: 48Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          volumeMounts:
+            - name: gateway-code
+              mountPath: /opt/gateway
+              readOnly: true
+            - name: auth
+              mountPath: /etc/mcp-auth
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: gateway-code
+          configMap:
+            name: mcp-diagnostics-gateway
+        - name: auth
+          secret:
+            secretName: mcp-diagnostics-auth
+            defaultMode: 0440
+        - name: tmp
+          emptyDir: {}
+        - name: kube-api-access
+          projected:
+            defaultMode: 0444
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  expirationSeconds: 3600
+              - configMap:
+                  name: kube-root-ca.crt
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+              - downwardAPI:
+                  items:
+                    - path: namespace
+                      fieldRef:
+                        apiVersion: v1
+                        fieldPath: metadata.namespace

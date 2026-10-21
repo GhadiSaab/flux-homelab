@@ -1,0 +1,90 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mcp-diagnostics-read
+  labels:
+    app.kubernetes.io/name: mcp-diagnostics
+    app.kubernetes.io/part-of: homelab-observability
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/log
+      - events
+      - services
+      - endpoints
+      - namespaces
+      - nodes
+      - persistentvolumeclaims
+      - persistentvolumes
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - statefulsets
+      - daemonsets
+      - replicasets
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+      - cronjobs
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - kustomize.toolkit.fluxcd.io
+    resources:
+      - kustomizations
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - helm.toolkit.fluxcd.io
+    resources:
+      - helmreleases
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - source.toolkit.fluxcd.io
+    resources:
+      - gitrepositories
+      - ocirepositories
+      - helmrepositories
+      - helmcharts
+      - buckets
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - metrics.k8s.io
+    resources:
+      - nodes
+      - pods
+    verbs:
+      - get
+      - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mcp-diagnostics-read
+  labels:
+    app.kubernetes.io/name: mcp-diagnostics
+    app.kubernetes.io/part-of: homelab-observability
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mcp-diagnostics-read
+subjects:
+  - kind: ServiceAccount
+    name: mcp-diagnostics
+    namespace: mcp-kubernetes
