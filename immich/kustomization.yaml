@@ -4,5 +4,6 @@ resources:
   - namespace.yaml
   - pvc.yaml
   - cloudnative-pg.yaml
+  - database-podmonitor.yaml
   - ocirepo.yaml
   - helmrelease.yaml

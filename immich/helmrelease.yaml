@@ -92,6 +92,10 @@ spec:
               service:
                 identifier: main
           tls: []
+      serviceMonitor:
+        main:
+          labels:
+            release: kube-prometheus-stack
     valkey:
       controllers:
         main:

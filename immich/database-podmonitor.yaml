@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: immich-database-metrics
+  namespace: immich
+  labels:
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector: {}
+  podMetricsEndpoints:
+    - port: metrics
+  selector:
+    matchLabels:
+      cnpg.io/cluster: immich-database
