@@ -32,5 +32,13 @@ spec:
             - k8s_namespace: "*"
           exclude_instrument:
             - k8s_namespace: "{kube-system,kube-public,kube-node-lease,flux-system,cert-manager,cnpg-system,tracing,monitoring-ns,loki}"
+        # Redis/Valkey client calls (bzpopmin, evalsha) are long-polling blocking
+        # waits that Beyla reports as multi-second spans under the caller's
+        # service name, which skews service p95 latency (e.g. Immich).
+        # Drop DB spans for Redis at the source so latency reflects real requests.
+        filter:
+          application:
+            db.system.name:
+              not_match: redis
         otel_traces_export:
           endpoint: http://tempo.tracing.svc.cluster.local:4318
