@@ -140,7 +140,7 @@ data:
                 "uid": "tempo"
               },
               "queryType": "traceql",
-              "query": "{ resource.service.name =~ \"$service\" && kind = server }",
+              "query": "{ resource.service.name =~ \"$service\" && kind = server } with (most_recent = true)",
               "limit": 50,
               "tableType": "traces",
               "filters": []
@@ -169,7 +169,7 @@ data:
                 "uid": "tempo"
               },
               "queryType": "traceql",
-              "query": "{ resource.service.name =~ \"$service\" && kind = server && duration > $min_duration }",
+              "query": "{ resource.service.name =~ \"$service\" && kind = server && duration > $min_duration } with (most_recent = true)",
               "limit": 50,
               "tableType": "traces",
               "filters": []
@@ -198,7 +198,7 @@ data:
                 "uid": "tempo"
               },
               "queryType": "traceql",
-              "query": "{ resource.service.name =~ \"$service\" && kind = server && (status = error || span.http.response.status_code >= 500) }",
+              "query": "{ resource.service.name =~ \"$service\" && kind = server && (status = error || span.http.response.status_code >= 500) } with (most_recent = true)",
               "limit": 50,
               "tableType": "traces",
               "filters": []
