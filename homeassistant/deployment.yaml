@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homeassistant
+  namespace: homeassistant
+spec:
+  replicas: 1
+  # RWO volume + host port 8123: never run two pods at once.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: homeassistant
+  template:
+    metadata:
+      labels:
+        app: homeassistant
+    spec:
+      # Host network so HA can discover LAN devices: WiZ (UDP broadcast 38899),
+      # Chromecast/Google Cast (mDNS) and the Xiaomi TV.
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: homeassistant
+          image: ghcr.io/home-assistant/home-assistant:2026.10.3
+          env:
+            - name: TZ
+              value: Europe/Paris
+          ports:
+            - name: http
+              containerPort: 8123
+          volumeMounts:
+            # configuration.yaml, automations, .storage (users, integrations)
+            # live on the PVC and are managed through the HA UI/API.
+            - name: config
+              mountPath: /config
+          readinessProbe:
+            tcpSocket:
+              port: 8123
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              memory: 1Gi
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: homeassistant-config
