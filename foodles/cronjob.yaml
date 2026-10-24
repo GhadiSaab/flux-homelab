@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: foodles-sync
+  namespace: foodles
+spec:
+  # Office fridge hours; one list request per run when nothing new was bought.
+  schedule: "*/15 8-19 * * 1-5"
+  timeZone: Europe/Paris
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: sync
+              image: python:3.12-slim
+              command: ["python", "/app/sync.py"]
+              env:
+                - name: DATA_DIR
+                  value: /data
+              envFrom:
+                - secretRef:
+                    name: foodles-credentials
+              volumeMounts:
+                - name: sync-script
+                  mountPath: /app
+                - name: data
+                  mountPath: /data
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 1000
+          volumes:
+            - name: sync-script
+              configMap:
+                name: foodles-sync-script
+            - name: data
+              hostPath:
+                path: /home/ghadi/foodles
+                type: Directory
