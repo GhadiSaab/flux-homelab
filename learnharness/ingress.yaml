@@ -1,0 +1,28 @@
+# Tailnet-only: DNS points at the homelab's Tailscale IP, and the router
+# only forwards port 80, so the app is served on websecure (443) alone.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: learnharness
+  namespace: learnharness
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - learnharness.gsaab.dev
+      secretName: learnharness-tls
+  rules:
+    - host: learnharness.gsaab.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: learnharness
+                port:
+                  number: 3000

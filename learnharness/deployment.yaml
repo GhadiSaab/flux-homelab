@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: learnharness
+  namespace: learnharness
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: learnharness
+  template:
+    metadata:
+      labels:
+        app: learnharness
+    spec:
+      initContainers:
+        # Seed the key store once; LearnHarness rewrites auth.json itself, so it lives on the PVC.
+        - name: seed-auth
+          image: busybox:1.37
+          command: ["sh", "-c", "mkdir -p /data/data && [ -f /data/auth.json ] || (cp /seed/auth.json /data/auth.json && chmod 600 /data/auth.json)"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: seed
+              mountPath: /seed
+              readOnly: true
+      containers:
+        - name: learnharness
+          image: learnharness:homelab-1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              memory: 1536Mi
+          readinessProbe:
+            httpGet:
+              path: /api/models
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/models
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: learnharness-data
+        - name: seed
+          secret:
+            secretName: learnharness-auth

@@ -19,6 +19,7 @@ resources:
   - mcp-kubernetes
   - freellmapi
   - minecraft
+  - learnharness
   - omni-agent
   - portfolio
   - foodles
