@@ -27,7 +27,23 @@ spec:
               PUID: "1000"
               PGID: "1000"
               TZ: Etc/UTC
+            resources:
+              requests:
+                cpu: 100m
+                memory: 512Mi
             probes:
+              # Jellyfin takes 20-60s to come up (DB migrations, library scan).
+              # Without a startupProbe, liveness kills it mid-boot.
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8096
+                  failureThreshold: 30
+                  periodSeconds: 5
+                  timeoutSeconds: 5
               liveness:
                 enabled: true
                 custom: true
@@ -35,8 +51,9 @@ spec:
                   httpGet:
                     path: /health
                     port: 8096
-                  initialDelaySeconds: 30
-                  periodSeconds: 15
+                  periodSeconds: 30
+                  timeoutSeconds: 10
+                  failureThreshold: 3
               readiness:
                 enabled: true
                 custom: true
@@ -44,8 +61,9 @@ spec:
                   httpGet:
                     path: /health
                     port: 8096
-                  initialDelaySeconds: 30
                   periodSeconds: 15
+                  timeoutSeconds: 10
+                  failureThreshold: 3
     service:
       main:
         controller: main
