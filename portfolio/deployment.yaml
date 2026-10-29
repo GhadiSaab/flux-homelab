@@ -20,6 +20,9 @@ spec:
         app.kubernetes.io/name: portfolio
     spec:
       automountServiceAccountToken: false
+      # The housy image is private (it contains an unlisted page).
+      imagePullSecrets:
+        - name: ghcr-pull-secret
       securityContext:
         runAsNonRoot: true
         runAsUser: 101
