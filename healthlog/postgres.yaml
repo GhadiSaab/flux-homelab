@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: healthlog-postgres
+  namespace: healthlog
+spec:
+  serviceName: healthlog-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: healthlog-postgres
+  template:
+    metadata:
+      labels:
+        app: healthlog-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:18-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: healthlog
+            - name: POSTGRES_DB
+              value: healthlog
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthlog-secrets
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "healthlog"]
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 4Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: healthlog-postgres
+  namespace: healthlog
+spec:
+  selector:
+    app: healthlog-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432

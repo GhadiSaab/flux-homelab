@@ -5,6 +5,7 @@ resources:
   - cloudflared
   - flux-system
   - health
+  - healthlog
   - immich
   - infra
   - kube-prometheus-stack

@@ -35,4 +35,6 @@ data:
         service: http://192.168.1.89:8088
         originRequest:
           httpHostHeader: paperclip.gsaab.dev
+      - hostname: healthlog.gsaab.dev
+        service: http://healthlog.healthlog.svc.cluster.local:3000
       - service: http_status:404
