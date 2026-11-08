@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: healthlog
-          image: ghcr.io/mbombeck/healthlog@sha256:3274c750f64ae70e1b4eb6e741de3cd4162b3323607a5fe38f40a8329478602b
+          image: ghcr.io/mbombeck/healthlog:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
