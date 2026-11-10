@@ -551,7 +551,7 @@ data:
           },
           "options": {
             "mode": "markdown",
-            "content": "**Management:** `systemctl --user status paperclipai-homelab` on `gsaab`\n\n**Backups:** encrypted Restic repository; daily 03:15 Europe/Paris. Isolated restore verification every Sunday 04:30.\n\n**Logs:** Explore Loki with `{service_name=\"paperclip\", host=\"gsaab\"}`.\n\n**Traces:** Explore Tempo with `{resource.service.name=\"paperclip-homelab\"}`.\n\nPublic ingress uses the k3s Cloudflare connectors. For cluster recovery, use SSH forwarding to the host-local service."
+            "content": "**Management:** `systemctl --user status paperclipai-homelab` on `gsaab`\n\n**Backups:** encrypted Restic repository; daily 03:15 Europe/Paris. Isolated restore verification every Sunday 04:30.\n\n**Logs:** Explore Loki with `{service_name=\"paperclip\", host=\"gsaab\"}`.\n\nPublic ingress uses the k3s Cloudflare connectors. For cluster recovery, use SSH forwarding to the host-local service."
           }
         }
       ]
