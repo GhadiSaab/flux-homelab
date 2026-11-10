@@ -11,6 +11,7 @@ spec:
     name: kubernetes-mcp-server
     namespace: mcp-kubernetes
   values:
+    replicaCount: 0
     extraArgs:
       - --read-only
     ingress:

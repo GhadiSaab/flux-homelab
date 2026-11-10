@@ -15,6 +15,8 @@ spec:
         namespace: flux-system
   values:
     tempo:
+      # Avoid the chart default allocating 1 GiB of ballast on this 16 GiB node.
+      memBallastSizeMbs: 0
       reportingEnabled: false
       retention: 72h
       resources:

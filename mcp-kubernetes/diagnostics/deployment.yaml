@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/name: mcp-diagnostics
     app.kubernetes.io/part-of: homelab-observability
 spec:
-  replicas: 1
+  replicas: 0
   revisionHistoryLimit: 3
   selector:
     matchLabels:

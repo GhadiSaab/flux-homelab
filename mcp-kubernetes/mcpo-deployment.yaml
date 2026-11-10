@@ -4,7 +4,7 @@ metadata:
   name: mcpo-kubernetes
   namespace: mcp-kubernetes
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: mcpo-kubernetes
