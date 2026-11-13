@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
 # One-time (and every ~90 days) BoursoBank login for the PEA sync.
-# Your login/password are typed here, sealed with kubeseal, and never printed or stored in plain text.
+# Your login/password are typed here and go straight into an in-cluster Secret (not in git, not on disk).
 set -euo pipefail
 K="sudo k3s kubectl"; REPO=~/gitops-homelab/sure
 if [ "${1:-}" != "--2fa-only" ]; then
   read -rp  "BoursoBank identifiant (digits): " LOGIN
   read -rsp "BoursoBank mot de passe: " PASS; echo
-  $K create secret generic sure-boursorama -n sure --from-literal=login="$LOGIN" --from-literal=password="$PASS" --dry-run=client -o yaml \
-    | sudo kubeseal --kubeconfig /etc/rancher/k3s/k3s.yaml --controller-namespace flux-system --controller-name sealed-secrets-controller --format yaml \
-    > "$REPO/pea-sync/sealedsecret.yaml"
+  # Created directly in the cluster from stdin: never written to disk, never committed to git.
+  $K -n sure delete secret sure-boursorama --ignore-not-found >/dev/null
+  printf "login=%s\npassword=%s\n" "$LOGIN" "$PASS" | $K -n sure create secret generic sure-boursorama --from-env-file=/dev/stdin >/dev/null
   unset LOGIN PASS
-  $K apply -f "$REPO/pea-sync/sealedsecret.yaml"
   for i in $(seq 30); do $K -n sure get secret sure-boursorama >/dev/null 2>&1 && break; sleep 1; done
 fi
 echo ">> Logging in to BoursoBank. Approve the request in the BoursoBank app (or type the SMS code) when asked."
