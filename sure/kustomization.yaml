@@ -7,3 +7,4 @@ resources:
   - redis.yaml
   - app.yaml
   - ingress.yaml
+  - pea-sync

@@ -1,0 +1,114 @@
+# Daily BoursoBank PEA → Sure sync (woob). See pea-sync/README.md.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sure-woob-state
+  namespace: sure
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 64Mi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pea-sync
+  namespace: sure
+spec:
+  schedule: "30 7 * * *"
+  timeZone: Europe/Paris
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 604800
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext:
+            fsGroup: 1000
+          initContainers:
+            - name: fetch
+              image: woob-bourso:1
+              imagePullPolicy: Never
+              command: ["python", "/scripts/fetch.py", "/work/pea.json"]
+              env:
+                - name: BOURSO_LOGIN
+                  valueFrom:
+                    secretKeyRef: { name: sure-boursorama, key: login, optional: true }
+                - name: BOURSO_PASSWORD
+                  valueFrom:
+                    secretKeyRef: { name: sure-boursorama, key: password, optional: true }
+              volumeMounts:
+                - { name: state, mountPath: /state }
+                - { name: work, mountPath: /work }
+                - { name: scripts, mountPath: /scripts }
+              resources:
+                requests: { cpu: 50m, memory: 96Mi }
+                limits: { memory: 384Mi }
+          containers:
+            - name: reconcile
+              image: ghcr.io/we-promise/sure:0.7.6-hotfix.1
+              imagePullPolicy: IfNotPresent
+              command: ["bin/rails", "runner", "/scripts/reconcile.rb"]
+              env:
+                - name: SELF_HOSTED
+                  value: "true"
+                - name: RAILS_FORCE_SSL
+                  value: "false"
+                - name: RAILS_ASSUME_SSL
+                  value: "true"
+                - name: APP_DOMAIN
+                  value: "finance.gsaab.dev"
+                - name: DB_HOST
+                  value: "sure-postgres"
+                - name: DB_PORT
+                  value: "5432"
+                - name: POSTGRES_USER
+                  value: "sure_user"
+                - name: POSTGRES_DB
+                  value: "sure_production"
+                - name: REDIS_URL
+                  value: "redis://sure-redis:6379/1"
+                - name: SECRET_KEY_BASE
+                  valueFrom:
+                    secretKeyRef:
+                      name: sure-secrets
+                      key: SECRET_KEY_BASE
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: sure-secrets
+                      key: POSTGRES_PASSWORD
+                - name: ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: sure-secrets
+                      key: ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY
+                - name: ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: sure-secrets
+                      key: ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
+                - name: ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
+                  valueFrom:
+                    secretKeyRef:
+                      name: sure-secrets
+                      key: ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
+              volumeMounts:
+                - { name: work, mountPath: /work }
+                - { name: scripts, mountPath: /scripts }
+              resources:
+                requests: { cpu: 100m, memory: 256Mi }
+                limits: { memory: 768Mi }
+          volumes:
+            - name: state
+              persistentVolumeClaim: { claimName: sure-woob-state }
+            - name: work
+              emptyDir: {}
+            - name: scripts
+              configMap: { name: pea-sync-scripts }
