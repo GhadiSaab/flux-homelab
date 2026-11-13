@@ -1,0 +1,44 @@
+# Sidekiq queue + Rails cache only; nothing here needs to survive a restart.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sure-redis
+  namespace: sure
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sure-redis
+  template:
+    metadata:
+      labels:
+        app: sure-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          args: ["--save", "", "--appendonly", "no", "--maxmemory", "128mb"]
+          ports:
+            - containerPort: 6379
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              memory: 192Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sure-redis
+  namespace: sure
+spec:
+  selector:
+    app: sure-redis
+  ports:
+    - port: 6379
+      targetPort: 6379

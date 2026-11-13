@@ -1,0 +1,206 @@
+# Uploaded files (statements, logos) are shared by web and worker; single node, so RWO is fine.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sure-storage
+  namespace: sure
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sure-web
+  namespace: sure
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: sure-web
+  template:
+    metadata:
+      labels:
+        app: sure-web
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: web
+          image: ghcr.io/we-promise/sure:0.7.6-hotfix.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          startupProbe:
+            httpGet:
+              path: /up
+              port: 3000
+            periodSeconds: 10
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /up
+              port: 3000
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /up
+              port: 3000
+            periodSeconds: 30
+            failureThreshold: 5
+          env:
+            - name: SELF_HOSTED
+              value: "true"
+            - name: RAILS_FORCE_SSL
+              value: "false"
+            - name: RAILS_ASSUME_SSL
+              value: "true"
+            - name: APP_DOMAIN
+              value: "finance.gsaab.dev"
+            - name: DB_HOST
+              value: "sure-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              value: "sure_user"
+            - name: POSTGRES_DB
+              value: "sure_production"
+            - name: REDIS_URL
+              value: "redis://sure-redis:6379/1"
+            - name: SECRET_KEY_BASE
+              valueFrom:
+                secretKeyRef:
+                  name: sure-secrets
+                  key: SECRET_KEY_BASE
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sure-secrets
+                  key: POSTGRES_PASSWORD
+            - name: ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sure-secrets
+                  key: ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY
+            - name: ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sure-secrets
+                  key: ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
+            - name: ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
+              valueFrom:
+                secretKeyRef:
+                  name: sure-secrets
+                  key: ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: storage
+              mountPath: /rails/storage
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: sure-storage
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sure-worker
+  namespace: sure
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: sure-worker
+  template:
+    metadata:
+      labels:
+        app: sure-worker
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: worker
+          image: ghcr.io/we-promise/sure:0.7.6-hotfix.1
+          imagePullPolicy: IfNotPresent
+          command: ["bundle", "exec", "sidekiq"]
+          env:
+            - name: SELF_HOSTED
+              value: "true"
+            - name: RAILS_FORCE_SSL
+              value: "false"
+            - name: RAILS_ASSUME_SSL
+              value: "true"
+            - name: APP_DOMAIN
+              value: "finance.gsaab.dev"
+            - name: DB_HOST
+              value: "sure-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              value: "sure_user"
+            - name: POSTGRES_DB
+              value: "sure_production"
+            - name: REDIS_URL
+              value: "redis://sure-redis:6379/1"
+            - name: SECRET_KEY_BASE
+              valueFrom:
+                secretKeyRef:
+                  name: sure-secrets
+                  key: SECRET_KEY_BASE
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sure-secrets
+                  key: POSTGRES_PASSWORD
+            - name: ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sure-secrets
+                  key: ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY
+            - name: ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sure-secrets
+                  key: ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY
+            - name: ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
+              valueFrom:
+                secretKeyRef:
+                  name: sure-secrets
+                  key: ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: storage
+              mountPath: /rails/storage
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: sure-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sure-web
+  namespace: sure
+spec:
+  selector:
+    app: sure-web
+  ports:
+    - port: 3000
+      targetPort: 3000
